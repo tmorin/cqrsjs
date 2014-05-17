@@ -1,8 +1,7 @@
-xdescribe('given a default cqrs instance', function() {
+describe('given a default cqrs instance', function() {
     var defaultCqrs, defaultOwner, defaultNamespace, defaultHandlers, defaultListeners, defaultAggregates;
 
     beforeEach(function() {
-        cqrs.test = true;
         cqrs.debug = true;
         defaultOwner = 'defaultCqrsInstance';
         defaultNamespace = 'defaultNamespace';
@@ -16,7 +15,7 @@ xdescribe('given a default cqrs instance', function() {
         });
     });
 
-    xdescribe('when cqrs#send is called', function() {
+    describe('when cqrs#send is called', function() {
         var defaultCommand, defaultPayload, defaultMetadata;
 
         beforeEach(function() {
@@ -30,7 +29,7 @@ xdescribe('given a default cqrs instance', function() {
             defaultMetadata = {};
         });
 
-        xdescribe('when command1 is sent', function() {
+        describe('when command1 is sent', function() {
             it('should return a promise', function(done) {
                 var p = defaultCqrs.send(defaultCommand.name, defaultPayload, defaultMetadata);
                 expect(typeof p.then).toBe('function');
