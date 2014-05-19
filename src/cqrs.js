@@ -73,6 +73,7 @@
                 aggregateName: aggregateName,
                 listeners: []
             };
+            aggregatesRepo.push(aggregate);
         }
         aggregate.listeners.push({
             eventName: eventName,
@@ -159,15 +160,22 @@
 
         // to publish an event
         function publish(eventName, payload, metadata) {
-            return new Promise(function (resolve, reject) {
-                var evtName = generateTechnicalName(namespace, 'evt', commandName);
+            var evtName = generateTechnicalName(namespace, 'evt', eventName);
+            if (cqrs.debug) {
+                console.log('cqrs - publish - publish event %s %o %o', evtName, payload, metadata);
+            }
+            var listeners = listListeners(evtName);
+            var promises = listeners.map(function(listener) {
+                var result = listener.callback(payload, metadata);
+                return Promise.resolve(result);
             });
+            return Promise.all(promises);
         }
         exports.publish = publish;
 
         // to register an aggregate
-        function aggregate(aggregateName, payload, metadata) {
-            var aggName = generateTechnicalName(namespace, 'agg', commandName);
+        function aggregate(aggregateName, callback) {
+            var aggName = generateTechnicalName(namespace, 'agg', aggregateName);
             var exports = {};
 
             // to publish an event from an aggregate
@@ -177,18 +185,30 @@
                 });
             }
 
+            function aggregateHandlerWrapper(payload, metadata) {
+                return callback(payload, metadata, apply);
+            }
+
             // to handle a command from an aggregate
             function aggregateHandler(commandName, callback) {
-                var cmdName = generateTechnicalName(namespace, 'cmd', commandName);
-
+                handle(commandName, aggregateHandlerWrapper);
+                return exports;
             }
             exports.handle = aggregateHandler;
 
             // to listen an event from an aggregate
             function aggregateListener(eventName, callback) {
-                var evtName = generateTechnicalName(namespace, 'evt', commandName);
+                var evtName = generateTechnicalName(namespace, 'evt', eventName);
+                if (cqrs.debug) {
+                    console.log('cqrs - aggregate listener - add listener %s:%s:%s', owner, aggName, evtName);
+                }
+                addAggregateListener(owner, aggName, evtName, callback)
             }
             exports.listen = aggregateListener;
+
+            if (callback) {
+                callback(aggregateHandler, aggregateListener);
+            }
 
             return exports;
         }
