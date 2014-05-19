@@ -16,13 +16,14 @@ describe('given a default cqrs instance', function() {
     });
 
     describe('when cqrs#send is called', function() {
-        var defaultCommand, defaultPayload, defaultMetadata;
+        var defaultCommand, defaultCommandName, defaultPayload, defaultMetadata;
 
         beforeEach(function() {
+            defaultCommandName = 'command1';
             defaultCommand = {
                 owner: defaultOwner,
-                name: 'command1',
-                defaultCallback: jasmine.createSpy('defaultCallback')
+                commandName: [defaultNamespace, 'cmd', defaultCommandName].join('-'),
+                callback: jasmine.createSpy('defaultCallback')
             };
             defaultHandlers.push(defaultCommand);
             defaultPayload = {};
@@ -30,27 +31,29 @@ describe('given a default cqrs instance', function() {
         });
 
         describe('when command1 is sent', function() {
+            var p;
             it('should return a promise', function(done) {
-                var p = defaultCqrs.send(defaultCommand.name, defaultPayload, defaultMetadata);
+                p = defaultCqrs.send(defaultCommandName, defaultPayload, defaultMetadata);
                 expect(typeof p.then).toBe('function');
-                p.then(done, done);
-            });
-            it('should execute the handler', function() {
-                expect(defaultCommand.defaultCallback).toHaveBeenCalled();
-                expect(defaultCommand.defaultCallback.calls.argsFor(0)).toBe(defaultPayload);
-                expect(defaultCommand.defaultCallback.calls.argsFor(1)).toBe(defaultMetadata);
+                function always() {
+                    expect(defaultCommand.callback).toHaveBeenCalled();
+                    expect(defaultCommand.callback.calls.argsFor(0)).toBe(defaultPayload);
+                    expect(defaultCommand.callback.calls.argsFor(1)).toBe(defaultMetadata);
+                    done();
+                }
+                p.then(always, always);
             });
         });
     });
 
-    xdescribe('when cqrs#handle is called', function() {
+    describe('when cqrs#handle is called', function() {
         it('should register an handler', function() {
             var name = 'command1';
             var cb = jasmine.createSpy('cb');
             defaultCqrs.handle(name, cb);
             expect(defaultHandlers.length).toEqual(1);
             expect(defaultHandlers[0].owner).toEqual(defaultOwner);
-            expect(defaultHandlers[0].name).toEqual(name);
+            expect(defaultHandlers[0].commandName).toEqual([defaultNamespace, 'cmd', name].join('-'));
             expect(defaultHandlers[0].callback).toEqual(cb);
         });
         it('should not register handlers handling the same command', function() {
@@ -61,7 +64,7 @@ describe('given a default cqrs instance', function() {
             defaultCqrs.handle(name, cb2);
             expect(defaultHandlers.length).toEqual(1);
             expect(defaultHandlers[0].owner).toEqual(defaultOwner);
-            expect(defaultHandlers[0].name).toEqual(name);
+            expect(defaultHandlers[0].commandName).toEqual([defaultNamespace, 'cmd', name].join('-'));
             expect(defaultHandlers[0].callback).toEqual(cb1);
         });
     });
@@ -104,15 +107,15 @@ describe('given a default cqrs instance', function() {
         });
     });
 
-    xdescribe('when cqrs#listen is called', function() {
+    describe('when cqrs#listen is called', function() {
         it('should register a listener', function() {
             var name = 'event1';
             var cb = jasmine.createSpy('cb');
             defaultCqrs.listen(name, cb);
-            expect(defaultListener.length).toEqual(1);
-            expect(defaultListener[0].owner).toEqual(defaultOwner);
-            expect(defaultListener[0].name).toEqual(name);
-            expect(defaultListener[0].callback).toEqual(cb);
+            expect(defaultListeners.length).toEqual(1);
+            expect(defaultListeners[0].owner).toEqual(defaultOwner);
+            expect(defaultListeners[0].eventName).toEqual([defaultNamespace, 'evt', name].join('-'));
+            expect(defaultListeners[0].callback).toEqual(cb);
         });
         it('should register listeners listenning the same event', function() {
             var name = 'event1';
@@ -120,13 +123,13 @@ describe('given a default cqrs instance', function() {
             var cb2 = jasmine.createSpy('cb2');
             defaultCqrs.listen(name, cb1);
             defaultCqrs.listen(name, cb2);
-            expect(defaultListener.length).toEqual(2);
-            expect(defaultListener[0].owner).toEqual(defaultOwner);
-            expect(defaultListener[0].name).toEqual(name);
-            expect(defaultListener[0].callback).toEqual(cb1);
-            expect(defaultListener[1].owner).toEqual(defaultOwner);
-            expect(defaultListener[1].name).toEqual(name);
-            expect(defaultListener[1].callback).toEqual(cb2);
+            expect(defaultListeners.length).toEqual(2);
+            expect(defaultListeners[0].owner).toEqual(defaultOwner);
+            expect(defaultListeners[0].eventName).toEqual([defaultNamespace, 'evt', name].join('-'));
+            expect(defaultListeners[0].callback).toEqual(cb1);
+            expect(defaultListeners[1].owner).toEqual(defaultOwner);
+            expect(defaultListeners[1].eventName).toEqual([defaultNamespace, 'evt', name].join('-'));
+            expect(defaultListeners[1].callback).toEqual(cb2);
         });
     });
 

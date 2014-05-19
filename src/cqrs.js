@@ -1,5 +1,8 @@
 (function(global) {
-    var handlersRepo = [], listenersRepo = [], aggregatesRepo = [], counter = 0;
+    var handlersRepo = [],
+        listenersRepo = [],
+        aggregatesRepo = [],
+        counter = 0;
 
     // handlers' repo functions
     function addHandler(owner, commandName, callback) {
@@ -35,7 +38,7 @@
 
     // listeners' repo functions
     function addListener(owner, eventName, callback) {
-        eventsRepo.push({
+        listenersRepo.push({
             owner: owner,
             eventName: eventName,
             callback: callback
@@ -43,16 +46,16 @@
     }
 
     function removeListeners(owner) {
-        var events = eventsRepo.filter(function (e) {
+        var listeners = listenersRepo.filter(function (e) {
             return e.owner === owner;
         });
-        events.forEach(function (e) {
-            eventsRepo.splice(e, 1);
+        listener.forEach(function (e) {
+            listenersRepo.splice(e, 1);
         });
     }
 
     function listListeners(eventName) {
-        return eventsRepo.filter(function (e) {
+        return listenersRepo.filter(function (e) {
             return e.eventName === eventName;
         });
     }
@@ -67,7 +70,7 @@
         } else {
             aggregate = {
                 owner: owner,
-                aggregateName: aggregateName
+                aggregateName: aggregateName,
                 listeners: []
             };
         }
@@ -109,6 +112,7 @@
         var cqrsCb, owner, namespace, exports;
         exports = {};
         cqrsCb = callback;
+        params = typeof callback === 'function' ? params : callback;
         owner = (params && params.owner) || ('owner-' + (counter++));
         namespace = params && params.namespace;
 
@@ -116,6 +120,9 @@
         function handle(commandName, callback) {
             var cmdName = generateTechnicalName(namespace, 'cmd', commandName);
             if (!getHandler(cmdName)) {
+                if (cqrs.debug) {
+                    console.log('cqrs - handle - add handler %s:%s', owner, cmdName);
+                }
                 addHandler(owner, cmdName, callback);
             }
             return exports;
@@ -126,14 +133,25 @@
         function send(commandName, payload, metadata) {
             return new Promise(function (resolve, reject) {
                 var cmdName = generateTechnicalName(namespace, 'cmd', commandName);
-
+                var handler = getHandler(cmdName);
+                if (handler) {
+                    if (cqrs.debug) {
+                        console.log('cqrs - send - send command %s %o %o', cmdName, payload, metadata);
+                    }
+                    resolve(handler.callback(payload, metadata));
+                } else {
+                    reject(new Error('unable to found an handler'));
+                }
             });
         }
         exports.send = send;
 
         // to listen an event
         function listen(eventName, callback) {
-            var evtName = generateTechnicalName(namespace, 'evt', commandName);
+            var evtName = generateTechnicalName(namespace, 'evt', eventName);
+            if (cqrs.debug) {
+                console.log('cqrs - listen - add listener %s:%s', owner, evtName);
+            }
             addListener(owner, evtName, callback);
             return exports;
         }
