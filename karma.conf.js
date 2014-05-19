@@ -11,9 +11,6 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'bower_components/jasmine/lib/jasmine-core/jasmine.js',
-      'bower_components/jasmine/lib/jasmine-core/jasmine-html.js',
-      'bower_components/jasmine/lib/jasmine-core/jasmine.css',
       'bower_components/promise-polyfill/Promise.js',
       'src/*.js',
       'spec/**/*.js'
@@ -25,7 +22,7 @@ module.exports = function(config) {
     reporters: ['progress', 'junit'],
 
     junitReporter: {
-        outputFile: 'results/test-results.xml'
+        // outputFile: 'results/test-results.xml'
     },
 
     // web server port
