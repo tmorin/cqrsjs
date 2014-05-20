@@ -19,10 +19,9 @@
     }
 
     function removeHandlers(owner) {
-        var commands = handlersRepo.filter(function (e) {
+        handlersRepo.filter(function (e) {
             return e.owner === owner;
-        });
-        commands.forEach(function (e) {
+        }).forEach(function (e) {
             handlersRepo.splice(e, 1);
         });
     }
@@ -46,10 +45,9 @@
     }
 
     function removeListeners(owner) {
-        var listeners = listenersRepo.filter(function (e) {
+        listenersRepo.filter(function (e) {
             return e.owner === owner;
-        });
-        listener.forEach(function (e) {
+        }).forEach(function (e) {
             listenersRepo.splice(e, 1);
         });
     }
@@ -81,11 +79,10 @@
         });
     }
 
-    function removeAggregateListener(owner) {
-        var aggregates = aggregatesRepo.filter(function (e) {
+    function removeAggregateListeners(owner) {
+        aggregatesRepo.filter(function (e) {
             return e.owner === owner;
-        });
-        aggregates.forEach(function (e) {
+        }).forEach(function (e) {
             aggregatesRepo.splice(e, 1);
         });
     }
@@ -243,8 +240,15 @@
 
         // to safely destroy the cqrs instance
         function destroy() {
+            removeHandlers(owner);
+            removeListeners(owner);
+            removeAggregateListeners(owner);
         }
         exports.destroy = destroy;
+
+        if (cqrsCb) {
+            cqrsCb(send, handle, publish, listen, aggregate);
+        }
 
         return exports;
     }
