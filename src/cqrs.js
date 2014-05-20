@@ -90,14 +90,20 @@
         });
     }
 
-    function listAggregateListeners(aggregateName) {
+    function listAggregateListeners(aggregateName, eventName) {
         return aggregatesRepo.filter(function (e) {
+            //console.log('listAggregateListeners filter', e.aggregateName, aggregateName);
             return e.aggregateName === aggregateName;
         }).map(function (e) {
+            //console.log('listAggregateListeners map', e);
             return e.listeners;
         }).reduce(function (a, b) {
-            return a.concate(b)
-        }, []);
+            //console.log('listAggregateListeners reduce', a, b);
+            return a.concat(b);
+        }, []).filter(function (l) {
+            //console.log('listAggregateListeners filter', l, l.eventName, eventName);
+            return l.eventName === eventName;
+        });
     }
 
     // generate technical name for aggregate, command and event
@@ -166,8 +172,14 @@
             }
             var listeners = listListeners(evtName);
             var promises = listeners.map(function(listener) {
-                var result = listener.callback(payload, metadata);
-                return Promise.resolve(result);
+                return new Promise(function (resolve, reject) {
+                    try {
+                        var result = listener.callback(payload, metadata);
+                        resolve(result);
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
             });
             return Promise.all(promises);
         }
@@ -180,10 +192,25 @@
 
             // to publish an event from an aggregate
             function apply(eventName, payload, metadata) {
-                return new Promise(function (resolve, reject) {
-                    var evtName = generateTechnicalName(namespace, 'evt', commandName);
+                var evtName = generateTechnicalName(namespace, 'evt', eventName);
+                if (cqrs.debug) {
+                    console.log('cqrs - aggregate apply - %s:%s:%s', owner, aggName, evtName);
+                }
+                var promises = listAggregateListeners(aggName, evtName).map(function (listener) {
+                    return new Promise(function (resolve, reject) {
+                        try {
+                            var result = listener.callback(payload, metadata);
+                            resolve(result);
+                        } catch (e) {
+                            reject(e);
+                        }
+                    });
+                });
+                return Promise.all(promises).then(function () {
+                    return publish(eventName, payload, metadata);
                 });
             }
+            exports.apply = apply;
 
             function aggregateHandlerWrapper(payload, metadata) {
                 return callback(payload, metadata, apply);
