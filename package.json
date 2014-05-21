@@ -6,6 +6,7 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "grunt-contrib-jshint": "^0.10.0",
     "grunt-karma": "^0.8.3",
     "karma": "^0.12.16",
     "karma-chrome-launcher": "^0.1.3",
