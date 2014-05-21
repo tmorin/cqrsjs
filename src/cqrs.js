@@ -2,6 +2,7 @@
     var handlersRepo = [],
         listenersRepo = [],
         aggregatesRepo = [],
+        queriesRepo = [],
         counter = 0;
 
     // handlers' repo functions
@@ -48,7 +49,8 @@
         listenersRepo.filter(function (e) {
             return e.owner === owner;
         }).forEach(function (e) {
-            listenersRepo.splice(e, 1);
+            var index = listenersRepo.indexOf(e);
+            listenersRepo.splice(index, 1);
         });
     }
 
@@ -60,7 +62,7 @@
 
     // aggregates listeners' repo functions
     function addAggregateListener(owner, aggregateName, eventName, callback) {
-        var aggregates = aggregatesRepo.filter(function (e) {
+        var aggregate, aggregates = aggregatesRepo.filter(function (e) {
             return e.owner === owner && e.aggregateName === aggregateName;
         });
         if (aggregates.length > 0) {
@@ -83,7 +85,8 @@
         aggregatesRepo.filter(function (e) {
             return e.owner === owner;
         }).forEach(function (e) {
-            aggregatesRepo.splice(e, 1);
+            var index = aggregatesRepo.indexOf(e);
+            aggregatesRepo.splice(index, 1);
         });
     }
 
@@ -103,6 +106,36 @@
         });
     }
 
+    // queries' repo functions
+    function addQuery(owner, namespace, queryName, queryFunction) {
+        var isAlreadyRegistered = queriesRepo.filter(function (query) {
+            return query.namespace === namespace && query.queryName === queryName;
+        }).length > 0;
+        if (!isAlreadyRegistered) {
+            queriesRepo.push({
+                owner: owner,
+                namespace: namespace,
+                queryName: queryName,
+                queryFunction: queryFunction
+            });
+        }
+    }
+
+    function removeQuery(owner) {
+        queriesRepo.filter(function (e) {
+            return e.owner === owner;
+        }).forEach(function (e) {
+            var index = queriesRepo.indexOf(e);
+            queriesRepo.splice(index, 1);
+        });
+    }
+
+    function listQueries(namespace) {
+        return queriesRepo.filter(function (e) {
+            return e.namespace === namespace;
+        });
+    }
+
     // generate technical name for aggregate, command and event
     function generateTechnicalName(namespace, type, name) {
         if (namespace) {
@@ -115,7 +148,7 @@
     function cqrs(callback, params) {
         var cqrsCb, owner, namespace, exports;
         exports = {};
-        cqrsCb = callback;
+        cqrsCb = typeof callback === 'function' && callback;
         params = typeof callback === 'function' ? params : callback;
         owner = (params && params.owner) || ('owner-' + (counter++));
         namespace = params && params.namespace;
@@ -226,7 +259,7 @@
                 if (cqrs.debug) {
                     console.log('cqrs - aggregate listener - add listener %s:%s:%s', owner, aggName, evtName);
                 }
-                addAggregateListener(owner, aggName, evtName, callback)
+                addAggregateListener(owner, aggName, evtName, callback);
             }
             exports.listen = aggregateListener;
 
@@ -238,11 +271,42 @@
         }
         exports.aggregate = aggregate;
 
+        function queryWrapper(queryFunction) {
+            return function () {
+                var args = Array.prototype.slice.call(arguments);
+                return new Promise(function (resolve, reject) {
+                    try {
+                        var result = queryFunction.apply(queryFunction, args);
+                        resolve(result);
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            };
+        }
+
+        function query() {
+            var queries = {};
+            listQueries(namespace).forEach(function (e) {
+                queries[e.queryName] = queryWrapper(e.queryFunction);
+            });
+            return queries;
+        }
+        exports.query = query;
+
+        query.add = function add(queryName, queryFunction) {
+            if (cqrs.debug) {
+                console.log('cqrs - add query %s:%s:%s', owner, namespace, queryName);
+            }
+            addQuery(owner, namespace, queryName, queryFunction);
+        };
+
         // to safely destroy the cqrs instance
         function destroy() {
             removeHandlers(owner);
             removeListeners(owner);
             removeAggregateListeners(owner);
+            removeQueries(owner);
         }
         exports.destroy = destroy;
 
@@ -253,11 +317,12 @@
         return exports;
     }
 
-    function setDefaultRepos(defaultHandlers, defaultListeners, defaultAggregates) {
+    function setDefaultRepos(defaultHandlers, defaultListeners, defaultAggregates, defaultQueries) {
         handlersRepo = defaultHandlers;
         listenersRepo = defaultListeners;
         aggregatesRepo = defaultAggregates;
-    };
+        queriesRepo = defaultQueries;
+    }
     cqrs.setDefaultRepos = setDefaultRepos;
 
     global.cqrs = cqrs;

@@ -1,5 +1,5 @@
 describe('given a default cqrs instance', function() {
-    var defaultCqrs, defaultOwner, defaultNamespace, defaultHandlers, defaultListeners, defaultAggregates;
+    var defaultCqrs, defaultOwner, defaultNamespace, defaultHandlers, defaultListeners, defaultAggregates, defaultQueries;
 
     beforeEach(function() {
         cqrs.debug = true;
@@ -8,7 +8,8 @@ describe('given a default cqrs instance', function() {
         defaultHandlers = [];
         defaultListeners = [];
         defaultAggregates = [];
-        cqrs.setDefaultRepos(defaultHandlers, defaultListeners, defaultAggregates);
+        defaultQueries = [];
+        cqrs.setDefaultRepos(defaultHandlers, defaultListeners, defaultAggregates, defaultQueries);
         defaultCqrs = cqrs({
             owner: defaultOwner,
             namespace: defaultNamespace
@@ -188,7 +189,7 @@ describe('given a default cqrs instance', function() {
             describe('when aggregate#listen is called', function() {
                 it('should register the listener', function() {
                     var name = 'event1';
-                    var techName = [defaultNamespace, 'evt', name].join('-')
+                    var techName = [defaultNamespace, 'evt', name].join('-');
                     var cb = jasmine.createSpy('cb');
                     defaultAggregate.listen(name, cb);
                     expect(defaultAggregates.length).toEqual(1);
@@ -201,7 +202,7 @@ describe('given a default cqrs instance', function() {
                 });
                 it('should register listeners handling the same event', function() {
                     var name = 'event1';
-                    var techName = [defaultNamespace, 'evt', name].join('-')
+                    var techName = [defaultNamespace, 'evt', name].join('-');
                     var cb1 = jasmine.createSpy('cb1');
                     var cb2 = jasmine.createSpy('cb2');
                     defaultAggregate.listen(name, cb1);
@@ -295,4 +296,76 @@ describe('given a default cqrs instance', function() {
         });
     });
 
+    describe('when cqrs#quey is called', function() {
+        var query1, query1Name, query1Function, query2, query2Name, query2Function;
+
+        beforeEach(function() {
+            query1Name = 'query1Name';
+            query1Function = jasmine.createSpy('defaultListener1');
+            var query1 = {
+                owner: defaultOwner,
+                namespace: defaultNamespace,
+                queryName: query1Name,
+                queryFunction: query1Function
+            };
+            defaultQueries.push(query1);
+            query2Name = 'query2Name';
+            query2Function = jasmine.createSpy('defaultListener1');
+            var query2 = {
+                owner: defaultOwner,
+                namespace: defaultNamespace,
+                queryName: query2Name,
+                queryFunction: query2Function
+            };
+            defaultQueries.push(query2);
+        });
+
+        it('should return all queries', function() {
+            var queries = defaultCqrs.query();
+            expect(typeof queries.query1Name).toBe('function');
+            expect(typeof queries.query2Name).toBe('function');
+        });
+
+        it('should invoke quer1Name', function(done) {
+            var p = defaultCqrs.query().query1Name();
+            expect(typeof p.then).toBe('function');
+            function always() {
+                expect(query1Function).toHaveBeenCalled();
+                done();
+            }
+            p.then(always, always);
+        });
+
+    });
+
+    describe('when cqrs#quey.add is called', function() {
+        var query1Name, query1Function, query2Name, query2Function;
+
+        beforeEach(function() {
+            query1Name = 'query1Name';
+            query1Function = jasmine.createSpy('defaultListener1');
+            query2Name = query1Name;
+            query2Function = jasmine.createSpy('defaultListener1');
+        });
+
+        it('should register query1', function() {
+            defaultCqrs.query.add(query1Name, query1Function);
+            expect(defaultQueries.length).toBe(1);
+            expect(defaultQueries[0].owner).toBe(defaultOwner);
+            expect(defaultQueries[0].namespace).toBe(defaultNamespace);
+            expect(defaultQueries[0].queryName).toBe(query1Name);
+            expect(defaultQueries[0].queryFunction).toBe(query1Function);
+        });
+
+        it('should not register query2', function() {
+            defaultCqrs.query.add(query1Name, query1Function);
+            defaultCqrs.query.add(query2Name, query2Function);
+            expect(defaultQueries.length).toBe(1);
+            expect(defaultQueries[0].owner).toBe(defaultOwner);
+            expect(defaultQueries[0].namespace).toBe(defaultNamespace);
+            expect(defaultQueries[0].queryName).toBe(query1Name);
+            expect(defaultQueries[0].queryFunction).toBe(query1Function);
+        });
+
+    });
 });
