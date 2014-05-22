@@ -1,5 +1,5 @@
 describe('given a default cqrs instance', function() {
-    var defaultCqrs, defaultOwner, defaultNamespace, defaultHandlers, defaultListeners, defaultAggregates, defaultQueries;
+    var defaultCqrs, defaultOwner, defaultNamespace, defaultHandlers, defaultListeners, defaultAggregates, defaultQueries, defaultPayload, defaultMetadata;
 
     beforeEach(function() {
         cqrs.debug = true;
@@ -14,12 +14,14 @@ describe('given a default cqrs instance', function() {
             owner: defaultOwner,
             namespace: defaultNamespace
         });
+        defaultPayload = {};
+        defaultMetadata = {};
     });
 
     describe('when cqrs#send is called', function() {
-        var defaultCommand, defaultCommandName, defaultPayload, defaultMetadata;
+        var defaultCommand, defaultCommandName;
 
-        beforeEach(function() {
+        beforeEach(function(done) {
             defaultCommandName = 'command1';
             defaultCommand = {
                 owner: defaultOwner,
@@ -33,16 +35,13 @@ describe('given a default cqrs instance', function() {
 
         describe('when command1 is sent', function() {
             var p;
-            it('should return a promise', function(done) {
+            beforeEach(function(done) {
                 p = defaultCqrs.send(defaultCommandName, defaultPayload, defaultMetadata);
-                expect(typeof p.then).toBe('function');
-                function always() {
-                    expect(defaultCommand.callback).toHaveBeenCalled();
-                    expect(defaultCommand.callback.calls.argsFor(0)).toBe(defaultPayload);
-                    expect(defaultCommand.callback.calls.argsFor(1)).toBe(defaultMetadata);
-                    done();
-                }
-                p.then(always, always);
+                p.then(done, done);
+            });
+            it('should return a promise', function() {
+                expect(defaultCommand.callback).toHaveBeenCalled();
+                expect(defaultCommand.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata, defaultCqrs.query);
             });
         });
     });
@@ -87,24 +86,20 @@ describe('given a default cqrs instance', function() {
                 callback: jasmine.createSpy('defaultListener2')
             };
             defaultListeners.push(defaultListener2);
-            defaultPayload = {};
-            defaultMetadata = {};
         });
 
         describe('when event1 is published', function() {
-            it('should return a promise', function(done) {
-                var p = defaultCqrs.publish(defaultEventName, defaultPayload, defaultMetadata);
-                expect(typeof p.then).toBe('function');
-                function always() {
-                    expect(defaultListener1.callback).toHaveBeenCalled();
-                    expect(defaultListener1.callback.calls.argsFor(0)).toBe(defaultPayload);
-                    expect(defaultListener1.callback.calls.argsFor(1)).toBe(defaultMetadata);
-                    expect(defaultListener2.callback).toHaveBeenCalled();
-                    expect(defaultListener2.callback.calls.argsFor(0)).toBe(defaultPayload);
-                    expect(defaultListener2.callback.calls.argsFor(1)).toBe(defaultMetadata);
-                    done();
-                }
+            var p;
+            beforeEach(function(done) {
+                p = defaultCqrs.publish(defaultEventName, defaultPayload, defaultMetadata);
                 p.then(done, done);
+            });
+            it('should return a promise', function() {
+                expect(typeof p.then).toBe('function');
+                expect(defaultListener1.callback).toHaveBeenCalled();
+                expect(defaultListener1.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata);
+                expect(defaultListener2.callback).toHaveBeenCalled();
+                expect(defaultListener2.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata);
             });
         });
     });
@@ -173,6 +168,18 @@ describe('given a default cqrs instance', function() {
                     expect(defaultHandlers[0].commandName).toEqual([defaultNamespace, 'cmd', name].join('-'));
                     expect(typeof defaultHandlers[0].callback).toBe('function');
                 });
+                it('should provides the apply function', function() {
+                    var name = 'command1';
+                    var cb = jasmine.createSpy('cb');
+                    defaultAggregate.handle(name, cb);
+                    expect(defaultHandlers.length).toEqual(1);
+                    expect(defaultHandlers[0].owner).toEqual(defaultOwner);
+                    expect(defaultHandlers[0].commandName).toEqual([defaultNamespace, 'cmd', name].join('-'));
+                    expect(typeof defaultHandlers[0].callback).toBe('function');
+                    defaultHandlers[0].callback(defaultPayload, defaultMetadata, defaultCqrs.query);
+                    expect(cb).toHaveBeenCalled();
+                    expect(cb).toHaveBeenCalledWith(defaultPayload, defaultMetadata, defaultCqrs.query, defaultAggregate.apply);
+                });
                 it('should not register handlers handling the same command', function() {
                     var name = 'command1';
                     var cb1 = jasmine.createSpy('cb1');
@@ -220,7 +227,7 @@ describe('given a default cqrs instance', function() {
             });
 
             describe('when aggregate#apply is called', function() {
-                var defaultPayload, defaultMetadata, defaultEventName, defaultEventTechName;
+                var defaultEventName, defaultEventTechName;
                 var defaultAggregateEntry, defaultAggregateListenerCallback;
 
                 beforeEach(function() {
@@ -236,59 +243,39 @@ describe('given a default cqrs instance', function() {
                         }]
                     };
                     defaultAggregates.push(defaultAggregateEntry);
-                    defaultPayload = {};
-                    defaultMetadata = {};
                 });
 
                 describe('when event1 is applied', function() {
-                    it('should execute the aggregate listener', function(done) {
-                        var p = defaultAggregate.apply(defaultEventName, defaultPayload, defaultMetadata);
-                        expect(typeof p.then).toBe('function');
-                        function always(done) {
-                            expect(defaultAggregateEntry.listeners[0].callback).toHaveBeenCalled();
-                            expect(defaultAggregateEntry.listeners[0].callback.calls.argsFor(0)).toBe(defaultPayload);
-                            expect(defaultAggregateEntry.listeners[0].callback.calls.argsFor(1)).toBe(defaultMetadata);
-                            done();
-                        }
-                        p.then(always, always);
+                    var p, defaultListener1, defaultListener2;
+
+                    beforeEach(function(done) {
+                        defaultListener1 = {
+                            owner: defaultOwner,
+                            eventName: defaultEventTechName,
+                            callback: jasmine.createSpy('defaultListener1')
+                        };
+                        defaultListeners.push(defaultListener1);
+                        defaultListener2 = {
+                            owner: defaultOwner,
+                            eventName: defaultEventTechName,
+                            callback: jasmine.createSpy('defaultListener2')
+                        };
+                        defaultListeners.push(defaultListener2);
+                        p = defaultAggregate.apply(defaultEventName, defaultPayload, defaultMetadata);
+                        setTimeout(function() {
+                            p.then(done, done);
+                        }, 200);
                     });
-                    describe('when event1 is listenning external listener', function() {
-                        var defaultListener1, defaultListener2;
 
-                        beforeEach(function() {
-                            defaultListener1 = {
-                                owner: defaultOwner,
-                                eventName: defaultEventTechName,
-                                callback: jasmine.createSpy('defaultListener1')
-                            };
-                            defaultListeners.push(defaultListener1);
-                            defaultListener2 = {
-                                owner: defaultOwner,
-                                eventName: defaultEventTechName,
-                                callback: jasmine.createSpy('defaultListener2')
-                            };
-                            defaultListeners.push(defaultListener2);
-                        });
-
-                        it('should execute the aggregate listener and the external listeners', function(done) {
-                            var p = defaultAggregate.apply(defaultEventName, defaultPayload, defaultMetadata);
-                            expect(typeof p.then).toBe('function');
-                            function always() {
-                                // aggregate listeners
-                                expect(defaultAggregateEntry.listeners[0].callback).toHaveBeenCalled();
-                                expect(defaultAggregateEntry.listeners[0].callback.calls.argsFor(0)).toBe(defaultPayload);
-                                expect(defaultAggregateEntry.listeners[0].callback.calls.argsFor(1)).toBe(defaultMetadata);
-                                // global listeners
-                                expect(defaultListener1.callback).toHaveBeenCalled();
-                                expect(defaultListener1.callback.calls.argsFor(0)).toBe(defaultPayload);
-                                expect(defaultListener1.callback.calls.argsFor(1)).toBe(defaultMetadata);
-                                expect(defaultListener2.callback).toHaveBeenCalled();
-                                expect(defaultListener2.callback.calls.argsFor(0)).toBe(defaultPayload);
-                                expect(defaultListener2.callback.calls.argsFor(1)).toBe(defaultMetadata);
-                                done();
-                            }
-                            p.then(always, always);
-                        });
+                    it('should execute the aggregate listener and external listeners', function() {
+                        // aggregate listeners
+                        expect(defaultAggregateEntry.listeners[0].callback).toHaveBeenCalled();
+                        expect(defaultAggregateEntry.listeners[0].callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata);
+                        // global listeners
+                        expect(defaultListener1.callback).toHaveBeenCalled();
+                        expect(defaultListener1.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata);
+                        expect(defaultListener2.callback).toHaveBeenCalled();
+                        expect(defaultListener2.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata);
                     });
                 });
             });

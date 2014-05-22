@@ -153,6 +153,36 @@
         owner = (params && params.owner) || ('owner-' + (counter++));
         namespace = params && params.namespace;
 
+        function queryWrapper(queryFunction) {
+            return function () {
+                var args = Array.prototype.slice.call(arguments);
+                return new Promise(function (resolve, reject) {
+                    try {
+                        var result = queryFunction.apply(queryFunction, args);
+                        resolve(result);
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            };
+        }
+
+        function query() {
+            var queries = {};
+            listQueries(namespace).forEach(function (e) {
+                queries[e.queryName] = queryWrapper(e.queryFunction);
+            });
+            return queries;
+        }
+        exports.query = query;
+
+        query.add = function add(queryName, queryFunction) {
+            if (cqrs.debug) {
+                console.log('cqrs - add query %s:%s:%s', owner, namespace, queryName);
+            }
+            addQuery(owner, namespace, queryName, queryFunction);
+        };
+
         // to handle a command
         function handle(commandName, callback) {
             var cmdName = generateTechnicalName(namespace, 'cmd', commandName);
@@ -175,7 +205,7 @@
                     if (cqrs.debug) {
                         console.log('cqrs - send - send command %s %o %o', cmdName, payload, metadata);
                     }
-                    resolve(handler.callback(payload, metadata));
+                    resolve(handler.callback(payload, metadata, query));
                 } else {
                     reject(new Error('unable to found an handler'));
                 }
@@ -237,18 +267,26 @@
                     });
                 });
                 return Promise.all(promises).then(function () {
-                    return publish(eventName, payload, metadata);
+                    console.log('debug inside');
+                    var result = publish(eventName, payload, metadata);
+                    console.log('debug', result);
+                    return result;
+                }).then(null , function (error) {
+                    console.log('debug error', error)
+                    return Promise.reject(error);
                 });
             }
             exports.apply = apply;
 
-            function aggregateHandlerWrapper(payload, metadata) {
-                return callback(payload, metadata, apply);
+            function aggregateHandlerWrapper(callback) {
+                return function (payload, metadata, query) {
+                    callback(payload, metadata, query, apply)
+                };
             }
 
             // to handle a command from an aggregate
             function aggregateHandler(commandName, callback) {
-                handle(commandName, aggregateHandlerWrapper);
+                handle(commandName, aggregateHandlerWrapper(callback));
                 return exports;
             }
             exports.handle = aggregateHandler;
@@ -271,36 +309,6 @@
         }
         exports.aggregate = aggregate;
 
-        function queryWrapper(queryFunction) {
-            return function () {
-                var args = Array.prototype.slice.call(arguments);
-                return new Promise(function (resolve, reject) {
-                    try {
-                        var result = queryFunction.apply(queryFunction, args);
-                        resolve(result);
-                    } catch (e) {
-                        reject(e);
-                    }
-                });
-            };
-        }
-
-        function query() {
-            var queries = {};
-            listQueries(namespace).forEach(function (e) {
-                queries[e.queryName] = queryWrapper(e.queryFunction);
-            });
-            return queries;
-        }
-        exports.query = query;
-
-        query.add = function add(queryName, queryFunction) {
-            if (cqrs.debug) {
-                console.log('cqrs - add query %s:%s:%s', owner, namespace, queryName);
-            }
-            addQuery(owner, namespace, queryName, queryFunction);
-        };
-
         // to safely destroy the cqrs instance
         function destroy() {
             removeHandlers(owner);
@@ -311,7 +319,7 @@
         exports.destroy = destroy;
 
         if (cqrsCb) {
-            cqrsCb(send, handle, publish, listen, aggregate);
+            cqrsCb(send, handle, publish, listen, aggregate, query);
         }
 
         return exports;
