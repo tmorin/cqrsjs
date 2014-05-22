@@ -20,7 +20,7 @@ module.exports = function(config) {
     // list of files / patterns to exclude
     exclude: [],
 
-    reporters: ['progress', 'junit'],
+    reporters: ['progress'],
 
     junitReporter: {
         // outputFile: 'results/test-results.xml'
