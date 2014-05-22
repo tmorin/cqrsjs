@@ -1,4 +1,7 @@
 (function(global) {
+
+    'use strict';
+
     var handlersRepo = [],
         listenersRepo = [],
         aggregatesRepo = [],
@@ -168,11 +171,11 @@
         }
 
         function queries() {
-            var interface = {};
+            var interfaces = {};
             listQueries(namespace).forEach(function (e) {
-                interface[e.queryName] = queryWrapper(e.queryFunction);
+                interfaces[e.queryName] = queryWrapper(e.queryFunction);
             });
-            return interface;
+            return interfaces;
         }
         exports.queries = queries;
 
