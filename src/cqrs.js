@@ -267,13 +267,8 @@
                     });
                 });
                 return Promise.all(promises).then(function () {
-                    console.log('debug inside');
                     var result = publish(eventName, payload, metadata);
-                    console.log('debug', result);
                     return result;
-                }).then(null , function (error) {
-                    console.log('debug error', error)
-                    return Promise.reject(error);
                 });
             }
             exports.apply = apply;

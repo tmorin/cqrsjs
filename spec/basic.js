@@ -21,7 +21,7 @@ describe('given a default cqrs instance', function() {
     describe('when cqrs#send is called', function() {
         var defaultCommand, defaultCommandName;
 
-        beforeEach(function(done) {
+        beforeEach(function() {
             defaultCommandName = 'command1';
             defaultCommand = {
                 owner: defaultOwner,
@@ -264,7 +264,7 @@ describe('given a default cqrs instance', function() {
                         p = defaultAggregate.apply(defaultEventName, defaultPayload, defaultMetadata);
                         setTimeout(function() {
                             p.then(done, done);
-                        }, 200);
+                        }, 100);
                     });
 
                     it('should execute the aggregate listener and external listeners', function() {
