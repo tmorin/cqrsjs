@@ -11,7 +11,8 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'bower_components/promise-polyfill/Promise.js',
+      //'bower_components/promise-polyfill/Promise.js',
+      'node_modules/es6-promise/dist/promise-1.0.0.js',
       'src/*.js',
       'spec/**/*.js'
     ],
@@ -45,7 +46,8 @@ module.exports = function(config) {
     // - Safari (only Mac)
     // - PhantomJS
     // - IE (only Windows)
-    browsers: ['PhantomJS'],
+    browsers: ['Chrome'],
+    //browsers: ['PhantomJS'],
 
 
     // Continuous Integration mode

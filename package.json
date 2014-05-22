@@ -6,6 +6,7 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "es6-promise": "^1.0.0",
     "grunt-contrib-jshint": "^0.10.0",
     "grunt-karma": "^0.8.3",
     "karma": "^0.12.16",
