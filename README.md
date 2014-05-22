@@ -1,23 +1,23 @@
 cqrsjs
 ======
 
-CQRS pattern application for javascript.
+CQRS pattern application for JavaScript.
 
 cqrsjs is designed to work for the browser and nodejs too.
 
-h2. Requirements
+## Requirements
 
 cqrsjs used the es6 Promise.
-So use a polyfill if th targetted runtime doesn't provide a native implementation.
+So use a polyfill if the targeted runtime doesn't provide a native implementation.
 
 Unless es5 features, specially Array's methods are required.
 
-h2. cq what?
+## cq what?
 
-h2. All in one function
+## All in one function
 
 cqrsjs provides only one function, cqrs(callback, params).
-Both, callback and params are optionals.
+Both, callback and params are optional.
 
 ```
 // when callback and params are defined
@@ -36,17 +36,18 @@ var instance4 = cqrs();
 Each invokation of cqrs() returns a unique instance.
 So instance1, instance2, instance3, instance4 are different.
 Each instance has an id, also called owner.
-So that, each action done beyong the returns instance will be linked to the owner value.
-The owner value is by default automaticaly generated.
-However the consumer can provide its owner id beyong the params argument.
+So that, each action done from the returns instance will be linked to the owner value.
+The owner value is by default automatically generated.
+However the consumer can provide its owner id from the params argument.
 Owner value can not be shared between instances.
 
 ```
 cqrs({
     owner: 'myCqrsInstance'
 }); // -> return an instance having the owner value myCqrsInstance
+```
 
-h2. Send a command
+## Send a command
 
 ```
 // using the fluent API
@@ -62,7 +63,7 @@ cqrs(function (send, handle, publish, listen, aggregate, queries) {
 }); // -> return the current cqrs instance
 ```
 
-h2. Handle a command
+## Handle a command
 
 ```
 // using the fluent API
@@ -82,7 +83,7 @@ cqrs(function (send, handle, publish, listen, aggregate, queries) {
 }); // -> return the current cqrs instance
 ```
 
-h2. Publish an event
+## Publish an event
 
 ```
 // using the fluent API
@@ -98,7 +99,7 @@ cqrs(function (send, handle, publish, listen, aggregate, queries) {
 }); // -> return the current cqrs instance
 ```
 
-h2. Listen an event
+## Listen an event
 
 ```
 // using the fluent API
@@ -118,9 +119,9 @@ cqrs(function (send, handle, publish, listen, aggregate, queries) {
 }); // -> return the current cqrs instance
 ```
 
-h2. Work with aggregates
+## Work with aggregates
 
-h3. Handle a command
+### Handle a command
 
 ```
 // using the fluent API
@@ -142,7 +143,7 @@ cqrs(function (send, handle, publish, listen, aggregate, queries) {
 }); // -> return the current cqrs instance
 ```
 
-h3. Listen a aggregate events
+### Listen a aggregate events
 
 ```
 // using the fluent API
@@ -164,7 +165,7 @@ cqrs(function (send, handle, publish, listen, aggregate, queries) {
 }); // -> return the current cqrs instance
 ```
 
-h2. Provide queries
+## Provide queries
 
 ```
 // using the fluent API
@@ -184,7 +185,7 @@ cqrs(function (send, handle, publish, listen, aggregate, queries) {
 }); // -> return the current cqrs instance
 ```
 
-h2. Consume queries
+## Consume queries
 
 ```
 // using the fluent API
@@ -198,10 +199,10 @@ cqrs(function (send, handle, publish, listen, aggregate, queries) {
 }); // -> return the current cqrs instance
 ```
 
-h2. Memory leaks and destruction
+## Memory leaks and destruction
 
-Each cqrs instance can be destoyed on demand calling the destroy method.
-The destroy method will removed the follwing stuff created using the cqrs instance:
+Each cqrs instance can be destroyed on demand calling the destroy method.
+The destroy method will removed the following stuff created using the cqrs instance:
 - command handlers
 - event listeners
 - aggregate event listeners
@@ -217,23 +218,23 @@ var cqrsInstance2 = cqrs();
 // destroy the first one
 cqrsInstance1.destroy();
 
-// all handlers, listeners, aggregate listeners and queries created beyong
+// all handlers, listeners, aggregate listeners and queries created from
 // cqrsInstance1 are now no longer available
 ```
 
-h2. Promise flow
+## Promise flow
 
 Keep min two things:
 - the functions send, publish and apply return always a promise
-- the callbacks of handlers, listeners and aggregate listeners are alwas wrapped arround a promise
+- the callbacks of handlers, listeners and aggregate listeners are always wrapped around a promise
 
-That means, cqrsjs is able to handle asynchonous execution
+The returned value of the callback is the resolved value of the wrapped promise.
 
 GIVEN the aggregate aggregate1 handling the command1
-AND the aggregate aggregate1 listenning the event1
+AND the aggregate aggregate1 listening the event1
 GIVEN the component component1 able to send the command1
-GIVEN the component component2 listenning the event1
-GIVEN the component component3 listenning the event1
+GIVEN the component component2 listening the event1
+GIVEN the component component3 listening the event1
 WHEN component1 send the command1
 THEN the aggregate1's handler will process the command
 THEN the aggregate1's handler will apply the event1
@@ -243,33 +244,9 @@ AND the aggregate1's listener will return a promise
 WHEN the promise is resolved
 THEN the compoent2's listener will process the event1
 AND the compoent3's listener will process the event1
-THEN all listener's promise are fullfiled
-THEN the promise of the component1's send invokation is fullfiled
+THEN all listener's promise are fulfilled
+THEN the promise of the component1's send invokation is fulfilled
 
 In this scenario the component1 could be able to know if the command processing has be successfully done to the last step or not.
 
-
-
-The functions send, publish and apply will always return promises.
-The promise flow are in function of the handlers and listeners implementation.
-
-Basically, according to the business, the context or whatever, the feedback about a command completion can be different.
-
-With cqrsjs you can handle theses three cases:
-
-The validation step
-We just want to know the command is valid and will be processed.
-We don't care if the processing will success or not.
-
-The validation and trandaction steps
-We want to know more than just the validation purpose.
-We want to know if the transaction (aggregate listeners step) has been processed successfully or not.
-But we don't want to know if the other listeners invokation succed or not.
-
-The validation, the trandaction and the dispatch steps
-We want to know if all the chain success or not.
-
-
-```
-
-```
+According to the implementation of the callback, all stuff done during the chain can be 'handled'.
