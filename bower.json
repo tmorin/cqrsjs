@@ -1,6 +1,6 @@
 {
   "name": "cqrsjs-master",
-  "private": true,
+  "version": "0.1.0",
   "dependencies": {},
   "devDependencies": {
     "jasmine": "~2.0.0",
