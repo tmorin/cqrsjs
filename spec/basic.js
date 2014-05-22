@@ -29,8 +29,6 @@ describe('given a default cqrs instance', function() {
                 callback: jasmine.createSpy('defaultCallback')
             };
             defaultHandlers.push(defaultCommand);
-            defaultPayload = {};
-            defaultMetadata = {};
         });
 
         describe('when command1 is sent', function() {
@@ -41,7 +39,7 @@ describe('given a default cqrs instance', function() {
             });
             it('should return a promise', function() {
                 expect(defaultCommand.callback).toHaveBeenCalled();
-                expect(defaultCommand.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata, defaultCqrs.query);
+                expect(defaultCommand.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata, defaultCqrs.queries);
             });
         });
     });
@@ -97,9 +95,9 @@ describe('given a default cqrs instance', function() {
             it('should return a promise', function() {
                 expect(typeof p.then).toBe('function');
                 expect(defaultListener1.callback).toHaveBeenCalled();
-                expect(defaultListener1.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata);
+                expect(defaultListener1.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata, defaultCqrs.queries);
                 expect(defaultListener2.callback).toHaveBeenCalled();
-                expect(defaultListener2.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata);
+                expect(defaultListener2.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata, defaultCqrs.queries);
             });
         });
     });
@@ -176,9 +174,9 @@ describe('given a default cqrs instance', function() {
                     expect(defaultHandlers[0].owner).toEqual(defaultOwner);
                     expect(defaultHandlers[0].commandName).toEqual([defaultNamespace, 'cmd', name].join('-'));
                     expect(typeof defaultHandlers[0].callback).toBe('function');
-                    defaultHandlers[0].callback(defaultPayload, defaultMetadata, defaultCqrs.query);
+                    defaultHandlers[0].callback(defaultPayload, defaultMetadata, defaultCqrs.queries);
                     expect(cb).toHaveBeenCalled();
-                    expect(cb).toHaveBeenCalledWith(defaultPayload, defaultMetadata, defaultCqrs.query, defaultAggregate.apply);
+                    expect(cb).toHaveBeenCalledWith(defaultPayload, defaultMetadata, defaultCqrs.queries, defaultAggregate.apply);
                 });
                 it('should not register handlers handling the same command', function() {
                     var name = 'command1';
@@ -270,12 +268,12 @@ describe('given a default cqrs instance', function() {
                     it('should execute the aggregate listener and external listeners', function() {
                         // aggregate listeners
                         expect(defaultAggregateEntry.listeners[0].callback).toHaveBeenCalled();
-                        expect(defaultAggregateEntry.listeners[0].callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata);
+                        expect(defaultAggregateEntry.listeners[0].callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata, defaultCqrs.queries);
                         // global listeners
                         expect(defaultListener1.callback).toHaveBeenCalled();
-                        expect(defaultListener1.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata);
+                        expect(defaultListener1.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata, defaultCqrs.queries);
                         expect(defaultListener2.callback).toHaveBeenCalled();
-                        expect(defaultListener2.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata);
+                        expect(defaultListener2.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata, defaultCqrs.queries);
                     });
                 });
             });
@@ -308,13 +306,13 @@ describe('given a default cqrs instance', function() {
         });
 
         it('should return all queries', function() {
-            var queries = defaultCqrs.query();
+            var queries = defaultCqrs.queries();
             expect(typeof queries.query1Name).toBe('function');
             expect(typeof queries.query2Name).toBe('function');
         });
 
         it('should invoke quer1Name', function(done) {
-            var p = defaultCqrs.query().query1Name();
+            var p = defaultCqrs.queries().query1Name();
             expect(typeof p.then).toBe('function');
             function always() {
                 expect(query1Function).toHaveBeenCalled();
@@ -336,7 +334,7 @@ describe('given a default cqrs instance', function() {
         });
 
         it('should register query1', function() {
-            defaultCqrs.query.add(query1Name, query1Function);
+            defaultCqrs.queries.add(query1Name, query1Function);
             expect(defaultQueries.length).toBe(1);
             expect(defaultQueries[0].owner).toBe(defaultOwner);
             expect(defaultQueries[0].namespace).toBe(defaultNamespace);
@@ -345,8 +343,8 @@ describe('given a default cqrs instance', function() {
         });
 
         it('should not register query2', function() {
-            defaultCqrs.query.add(query1Name, query1Function);
-            defaultCqrs.query.add(query2Name, query2Function);
+            defaultCqrs.queries.add(query1Name, query1Function);
+            defaultCqrs.queries.add(query2Name, query2Function);
             expect(defaultQueries.length).toBe(1);
             expect(defaultQueries[0].owner).toBe(defaultOwner);
             expect(defaultQueries[0].namespace).toBe(defaultNamespace);

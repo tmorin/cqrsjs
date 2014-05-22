@@ -167,20 +167,21 @@
             };
         }
 
-        function query() {
-            var queries = {};
+        function queries() {
+            var interface = {};
             listQueries(namespace).forEach(function (e) {
-                queries[e.queryName] = queryWrapper(e.queryFunction);
+                interface[e.queryName] = queryWrapper(e.queryFunction);
             });
-            return queries;
+            return interface;
         }
-        exports.query = query;
+        exports.queries = queries;
 
-        query.add = function add(queryName, queryFunction) {
+        queries.add = function add(queryName, queryFunction) {
             if (cqrs.debug) {
                 console.log('cqrs - add query %s:%s:%s', owner, namespace, queryName);
             }
             addQuery(owner, namespace, queryName, queryFunction);
+            return exports;
         };
 
         // to handle a command
@@ -205,7 +206,7 @@
                     if (cqrs.debug) {
                         console.log('cqrs - send - send command %s %o %o', cmdName, payload, metadata);
                     }
-                    resolve(handler.callback(payload, metadata, query));
+                    resolve(handler.callback(payload, metadata, queries));
                 } else {
                     reject(new Error('unable to found an handler'));
                 }
@@ -234,7 +235,7 @@
             var promises = listeners.map(function(listener) {
                 return new Promise(function (resolve, reject) {
                     try {
-                        var result = listener.callback(payload, metadata);
+                        var result = listener.callback(payload, metadata, queries);
                         resolve(result);
                     } catch (e) {
                         reject(e);
@@ -259,7 +260,7 @@
                 var promises = listAggregateListeners(aggName, evtName).map(function (listener) {
                     return new Promise(function (resolve, reject) {
                         try {
-                            var result = listener.callback(payload, metadata);
+                            var result = listener.callback(payload, metadata, queries);
                             resolve(result);
                         } catch (e) {
                             reject(e);
@@ -274,8 +275,8 @@
             exports.apply = apply;
 
             function aggregateHandlerWrapper(callback) {
-                return function (payload, metadata, query) {
-                    callback(payload, metadata, query, apply)
+                return function (payload, metadata, queries) {
+                    callback(payload, metadata, queries, apply);
                 };
             }
 
