@@ -66,6 +66,7 @@ When a command is sent from a cqrs instance attached to the namespace foo,
 only handlers declared from cqrs instances attached to the namespace foo will be invoked.
 It's the same mechanism for event, aggregate and queries.
 
+```
 var bar = cqrs({
     namespace: 'myNamespace'
 }); // -> return an instance attached to the namespace myNamespace
