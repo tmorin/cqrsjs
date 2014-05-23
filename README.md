@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/tmorin/cqrsjs.svg?branch=master)](https://travis-ci.org/tmorin/cqrsjs)
+
 cqrsjs
 ======
 
@@ -10,7 +12,7 @@ cqrsjs is designed to work for the browser and nodejs too.
 cqrsjs used the es6 Promise.
 So use a polyfill if the targeted runtime doesn't provide a native implementation.
 
-cqrsjs is built arround the es5 features.
+cqrsjs is built around the es5 features.
 
 So it should work for nodejs, evergreen browsers, IE9 and IE10.
 
@@ -18,8 +20,8 @@ If not ... it's a bug.
 
 ## cq what?
 
-cqrs means Command and Query Responsability Segregation.
-It's comming from far. So wikipedia will be better place to know more about it.
+cqrs means Command and Query Responsibility Segregation.
+It's coming from far. So wikipedia will be better place to know more about it.
 
 ## All in one function
 
@@ -41,7 +43,7 @@ var instance4 = cqrs();
 ```
 
 Each invokation of cqrs() returns a unique instance.
-So instance1, instance2, instance3, instance4 are differents.
+So instance1, instance2, instance3, instance4 are different.
 
 Each instance has an id, also called owner.
 So that, each actions done from the returned instance will be linked to the owner value.
@@ -62,7 +64,7 @@ A namespace can also be given as parameter.
 A namespace can be shared between several cqrs instances.
 When a command is sent from a cqrs instance attached to the namespace foo,
 only handlers declared from cqrs instances attached to the namespace foo will be invoked.
-It's the same meachanism for event, aggregate and queries.
+It's the same mechanism for event, aggregate and queries.
 
 var bar = cqrs({
     namespace: 'myNamespace'
@@ -148,7 +150,7 @@ Aggregate can be see as a transactional space.
 Things done into an aggregate can be committed or rollbacked.
 The same aggregate can be enhanced by several cqrs instances.
 
-The following paragraphes take as exemple an application called shoplist.
+The following paragraphs take as example an application called shoplist.
 The shoplist application list items to buy.
 When the user bought an item, the item can be marked as bought.
 For each item there is a quantity.
@@ -159,7 +161,7 @@ So, the list cool be something like that:
 
 The main business rule say: you can not have two lines having the same item's label.
 
-For the ui parts, the user expects suggestions when he's typing an item's label to add.
+For the UI parts, the user expects suggestions when he's typing an item's label to add.
 Obviously, the suggestions can not contain items already present into the list.
 But the suggestion must contain items already present in the past into a previous list.
 
@@ -182,16 +184,16 @@ To do that, the command has to consume a query: isItemNotBought.
 If the item is not yet bought, the event itemMarkedBought is applied.
 
 The event itemAdded and itemMarkedBought are applied, but not published by the command handlers.
-It's a big different, that means aggregate listeners listenning these events will be invoked first.
-The external listeners listenning these events will be invoked only if the aggregate listeners invokation are succesfull.
+It's a big different, that means aggregate listeners listening these events will be invoked first.
+The external listeners listening these events will be invoked only if the aggregate listeners invokation are successful.
 In the case where the event is published instead of applied, the aggregate listeners will be skipped.
-That means, the implementation of the command handlers have to be attached to the targetted aggregates.
-In our case, the targetted aggregate of the commands addItem and markItemBought is items.
+That means, the implementation of the command handlers have to be attached to the targeted aggregates.
+In our case, the targeted aggregate of the commands addItem and markItemBought is items.
 
 Because, the aggregate listeners are invoked before the externals.
-And because the invokations of the externals are done according to the success of the aggregage listeners invokations.
+And because the invokations of the externals are done according to the success of the aggregate listeners invokations.
 The implementation of the persistence should be done into these aggregate listeners.
-Moreover, about rollbacking, it should be have only one aggregate listener by applied event.
+Moreover, about roll backing, it should be have only one aggregate listener by applied event.
 
 The implementation of the command handlers and aggregate listeners can be done like this:
 
@@ -254,7 +256,7 @@ cqrs(function (send, handle, publish, listen, aggregate, queries) {
 ```
 
 Others components should be created in order to handle the UI parts.
-The first one shoudl append the added item and mark item bought.
+The first one should append the added item and mark item bought.
 The second one to update the auto-complete widget.
 
 ### Handle a command
