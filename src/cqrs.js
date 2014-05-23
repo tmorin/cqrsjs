@@ -318,7 +318,7 @@
         exports.destroy = destroy;
 
         if (cqrsCb) {
-            cqrsCb(send, handle, publish, listen, aggregate, query);
+            cqrsCb(send, handle, publish, listen, aggregate, queries);
         }
 
         return exports;
