@@ -323,7 +323,7 @@ describe('given a default cqrs instance', function() {
 
     });
 
-    describe('when cqrs#quey.add is called', function() {
+    describe('when cqrs#quey(queryName, queryFunction) is called', function() {
         var query1Name, query1Function, query2Name, query2Function;
 
         beforeEach(function() {
@@ -334,7 +334,7 @@ describe('given a default cqrs instance', function() {
         });
 
         it('should register query1', function() {
-            defaultCqrs.queries.add(query1Name, query1Function);
+            defaultCqrs.queries(query1Name, query1Function);
             expect(defaultQueries.length).toBe(1);
             expect(defaultQueries[0].owner).toBe(defaultOwner);
             expect(defaultQueries[0].namespace).toBe(defaultNamespace);
@@ -343,8 +343,8 @@ describe('given a default cqrs instance', function() {
         });
 
         it('should not register query2', function() {
-            defaultCqrs.queries.add(query1Name, query1Function);
-            defaultCqrs.queries.add(query2Name, query2Function);
+            defaultCqrs.queries(query1Name, query1Function);
+            defaultCqrs.queries(query2Name, query2Function);
             expect(defaultQueries.length).toBe(1);
             expect(defaultQueries[0].owner).toBe(defaultOwner);
             expect(defaultQueries[0].namespace).toBe(defaultNamespace);

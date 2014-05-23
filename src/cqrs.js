@@ -170,7 +170,14 @@
             };
         }
 
-        function queries() {
+        function queries(queryName, queryFunction) {
+            if (queryName && queryFunction) {
+                if (cqrs.debug) {
+                    console.log('cqrs - add query %s:%s:%s', owner, namespace, queryName);
+                }
+                addQuery(owner, namespace, queryName, queryFunction);
+                return exports;
+            }
             var interfaces = {};
             listQueries(namespace).forEach(function (e) {
                 interfaces[e.queryName] = queryWrapper(e.queryFunction);
@@ -178,14 +185,6 @@
             return interfaces;
         }
         exports.queries = queries;
-
-        queries.add = function add(queryName, queryFunction) {
-            if (cqrs.debug) {
-                console.log('cqrs - add query %s:%s:%s', owner, namespace, queryName);
-            }
-            addQuery(owner, namespace, queryName, queryFunction);
-            return exports;
-        };
 
         // to handle a command
         function handle(commandName, callback) {

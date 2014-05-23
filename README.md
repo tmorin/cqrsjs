@@ -308,7 +308,7 @@ cqrs(function (send, handle, publish, listen, aggregate, queries) {
 
 ```
 // using the linked API
-cqrs().queries.add('queryName', function() {
+cqrs().queries('queryName', function() {
     // do some stuff with YOUR arguments
     // can return a promise
 }) // -> return the current cqrs instance
@@ -317,7 +317,7 @@ cqrs().queries.add('queryName', function() {
 ```
 // using the callback API
 cqrs(function (send, handle, publish, listen, aggregate, queries) {
-    queries.add('queryName', function() {
+    queries('queryName', function() {
         // do some stuff with YOUR arguments
         // can return a promise
     }); // -> return the current cqrs instance
