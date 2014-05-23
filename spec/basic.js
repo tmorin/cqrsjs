@@ -286,7 +286,7 @@ describe('given a default cqrs instance', function() {
 
         beforeEach(function() {
             query1Name = 'query1Name';
-            query1Function = jasmine.createSpy('defaultListener1');
+            query1Function = jasmine.createSpy('query1Function');
             var query1 = {
                 owner: defaultOwner,
                 namespace: defaultNamespace,
@@ -295,7 +295,7 @@ describe('given a default cqrs instance', function() {
             };
             defaultQueries.push(query1);
             query2Name = 'query2Name';
-            query2Function = jasmine.createSpy('defaultListener1');
+            query2Function = jasmine.createSpy('query2Function');
             var query2 = {
                 owner: defaultOwner,
                 namespace: defaultNamespace,
@@ -328,9 +328,9 @@ describe('given a default cqrs instance', function() {
 
         beforeEach(function() {
             query1Name = 'query1Name';
-            query1Function = jasmine.createSpy('defaultListener1');
+            query1Function = jasmine.createSpy('query1Function');
             query2Name = query1Name;
-            query2Function = jasmine.createSpy('defaultListener1');
+            query2Function = jasmine.createSpy('query2Function');
         });
 
         it('should register query1', function() {
