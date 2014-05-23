@@ -1,7 +1,9 @@
 {
   "name": "cqrsjs-master",
   "version": "0.0.0",
-  "scripts": {},
+  "scripts": {
+    "test": "./node_modules/karma/bin/karma start --single-run --browsers PhantomJS"
+  },
   "dependencies": {},
   "devDependencies": {
     "es6-promise": "^1.0.0",
