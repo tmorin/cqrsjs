@@ -23,6 +23,13 @@ module.exports = function (grunt) {
                 }
             }
         },
+        copy: {
+            default: {
+                files: [
+                    {expand: true, cwd: 'src/', src: ['**'], dest: 'dist/'}
+                ]
+            }
+        },
         uglify: {
             default: {
                 options: {
@@ -32,7 +39,7 @@ module.exports = function (grunt) {
                     sourceMapName: 'dist/cqrs.map'
                 },
                 files: {
-                    'dist/cqrs.min.js': ['src/cqrs.js']
+                    'dist/cqrs.min.js': ['dist/cqrs.js']
                 }
             }
         },
@@ -53,11 +60,12 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-tagrelease');
     grunt.loadNpmTasks('grunt-bumpup');
     grunt.loadNpmTasks('grunt-exec');
 
-    grunt.registerTask('build', ['jshint', 'karma', 'uglify']);
+    grunt.registerTask('build', ['jshint', 'karma', 'copy', 'uglify']);
     grunt.registerTask('bump:patch', ['bumpup:patch', 'tagrelease']);
 
     grunt.registerTask('push', ['exec:update_master']);
