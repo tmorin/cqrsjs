@@ -309,7 +309,7 @@ describe('given a default cqrs instance', function() {
             var p;
             beforeEach(function(done) {
                 p = defaultCqrs.call(query1Name, true);
-                p.then(done, done)
+                p.then(done, done);
             });
 
             it('should invoke quer1Name', function() {
@@ -322,7 +322,7 @@ describe('given a default cqrs instance', function() {
             var p;
             beforeEach(function(done) {
                 p = defaultCqrs.call(query2Name, true);
-                p.then(done, done)
+                p.then(done, done);
             });
 
             it('should invoke quer1Name', function() {
