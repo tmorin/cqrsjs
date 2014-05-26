@@ -1,4 +1,19 @@
-(function(global) {
+
+(function(global, factory) {
+
+    if (typeof define == 'function' && define.amd) {
+        define(function() {
+            return factory(global);
+        });
+    } else if (typeof module !== 'undefined') {
+        module.exports = factory(global);
+    } else if (typeof global.exports !== 'undefined') {
+        exports.cqrs = factory(global);
+    } else {
+        global.cqrs = factory(global);
+    }
+
+}(this, function(global) {
 
     'use strict';
 
@@ -110,14 +125,13 @@
     }
 
     // queries' repo functions
-    function addQuery(owner, namespace, queryName, queryFunction) {
+    function addQuery(owner, queryName, queryFunction) {
         var isAlreadyRegistered = queriesRepo.filter(function (query) {
-            return query.namespace === namespace && query.queryName === queryName;
+            return query.queryName === queryName;
         }).length > 0;
         if (!isAlreadyRegistered) {
             queriesRepo.push({
                 owner: owner,
-                namespace: namespace,
                 queryName: queryName,
                 queryFunction: queryFunction
             });
@@ -133,10 +147,10 @@
         });
     }
 
-    function listQueries(namespace) {
+    function getQuery(queryName) {
         return queriesRepo.filter(function (e) {
-            return e.namespace === namespace;
-        });
+            return e.queryName === queryName;
+        })[0];
     }
 
     // generate technical name for aggregate, command and event
@@ -156,35 +170,38 @@
         owner = (params && params.owner) || ('owner-' + (counter++));
         namespace = params && params.namespace;
 
-        function queryWrapper(queryFunction) {
-            return function () {
-                var args = Array.prototype.slice.call(arguments);
-                return new Promise(function (resolve, reject) {
+        function register(queryName, queryFunction) {
+            var qryName = generateTechnicalName(namespace, 'qry', queryName);
+            if (cqrs.debug) {
+                console.log('cqrs - add query %s:%s', owner, qryName);
+            }
+            addQuery(owner, queryName, queryFunction);
+            return exports;
+        }
+        exports.register = register;
+
+        function call() {
+            var args = Array.prototype.slice.call(arguments);
+            var queryName = args.shift();
+            var qryName = generateTechnicalName(namespace, 'qry', queryName);
+            if (cqrs.debug) {
+                console.log('cqrs - query - call query %s:%s', owner, qryName);
+            }
+            return new Promise(function (resolve, reject) {
+                var query = getQuery(qryName);
+                if (query) {
                     try {
-                        var result = queryFunction.apply(queryFunction, args);
+                        var result = query.queryFunction.apply(global, args);
                         resolve(result);
                     } catch (e) {
                         reject(e);
                     }
-                });
-            };
-        }
-
-        function queries(queryName, queryFunction) {
-            if (queryName && queryFunction) {
-                if (cqrs.debug) {
-                    console.log('cqrs - add query %s:%s:%s', owner, namespace, queryName);
+                } else {
+                    reject(new Error('unable to find the query: ' + qryName));
                 }
-                addQuery(owner, namespace, queryName, queryFunction);
-                return exports;
-            }
-            var interfaces = {};
-            listQueries(namespace).forEach(function (e) {
-                interfaces[e.queryName] = queryWrapper(e.queryFunction);
             });
-            return interfaces;
         }
-        exports.queries = queries;
+        exports.call = call;
 
         // to handle a command
         function handle(commandName, callback) {
@@ -208,7 +225,7 @@
                     if (cqrs.debug) {
                         console.log('cqrs - send - send command %s %o %o', cmdName, payload, metadata);
                     }
-                    resolve(handler.callback(payload, metadata, queries));
+                    resolve(handler.callback(payload, metadata));
                 } else {
                     reject(new Error('unable to found an handler'));
                 }
@@ -237,7 +254,7 @@
             var promises = listeners.map(function(listener) {
                 return new Promise(function (resolve, reject) {
                     try {
-                        var result = listener.callback(payload, metadata, queries);
+                        var result = listener.callback(payload, metadata);
                         resolve(result);
                     } catch (e) {
                         reject(e);
@@ -262,7 +279,7 @@
                 var promises = listAggregateListeners(aggName, evtName).map(function (listener) {
                     return new Promise(function (resolve, reject) {
                         try {
-                            var result = listener.callback(payload, metadata, queries);
+                            var result = listener.callback(payload, metadata);
                             resolve(result);
                         } catch (e) {
                             reject(e);
@@ -277,8 +294,8 @@
             exports.apply = apply;
 
             function aggregateHandlerWrapper(callback) {
-                return function (payload, metadata, queries) {
-                    callback(payload, metadata, queries, apply);
+                return function (payload, metadata) {
+                    callback(payload, metadata, apply);
                 };
             }
 
@@ -317,7 +334,7 @@
         exports.destroy = destroy;
 
         if (cqrsCb) {
-            cqrsCb(send, handle, publish, listen, aggregate, queries);
+            cqrsCb(send, handle, publish, listen, aggregate, query, register);
         }
 
         return exports;
@@ -331,5 +348,5 @@
     }
     cqrs.setDefaultRepos = setDefaultRepos;
 
-    global.cqrs = cqrs;
-}(this));
+    return cqrs;
+}));

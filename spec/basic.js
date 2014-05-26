@@ -39,7 +39,7 @@ describe('given a default cqrs instance', function() {
             });
             it('should return a promise', function() {
                 expect(defaultCommand.callback).toHaveBeenCalled();
-                expect(defaultCommand.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata, defaultCqrs.queries);
+                expect(defaultCommand.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata);
             });
         });
     });
@@ -95,9 +95,9 @@ describe('given a default cqrs instance', function() {
             it('should return a promise', function() {
                 expect(typeof p.then).toBe('function');
                 expect(defaultListener1.callback).toHaveBeenCalled();
-                expect(defaultListener1.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata, defaultCqrs.queries);
+                expect(defaultListener1.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata);
                 expect(defaultListener2.callback).toHaveBeenCalled();
-                expect(defaultListener2.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata, defaultCqrs.queries);
+                expect(defaultListener2.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata);
             });
         });
     });
@@ -174,9 +174,9 @@ describe('given a default cqrs instance', function() {
                     expect(defaultHandlers[0].owner).toEqual(defaultOwner);
                     expect(defaultHandlers[0].commandName).toEqual([defaultNamespace, 'cmd', name].join('-'));
                     expect(typeof defaultHandlers[0].callback).toBe('function');
-                    defaultHandlers[0].callback(defaultPayload, defaultMetadata, defaultCqrs.queries);
+                    defaultHandlers[0].callback(defaultPayload, defaultMetadata);
                     expect(cb).toHaveBeenCalled();
-                    expect(cb).toHaveBeenCalledWith(defaultPayload, defaultMetadata, defaultCqrs.queries, defaultAggregate.apply);
+                    expect(cb).toHaveBeenCalledWith(defaultPayload, defaultMetadata, defaultAggregate.apply);
                 });
                 it('should not register handlers handling the same command', function() {
                     var name = 'command1';
@@ -268,12 +268,12 @@ describe('given a default cqrs instance', function() {
                     it('should execute the aggregate listener and external listeners', function() {
                         // aggregate listeners
                         expect(defaultAggregateEntry.listeners[0].callback).toHaveBeenCalled();
-                        expect(defaultAggregateEntry.listeners[0].callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata, defaultCqrs.queries);
+                        expect(defaultAggregateEntry.listeners[0].callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata);
                         // global listeners
                         expect(defaultListener1.callback).toHaveBeenCalled();
-                        expect(defaultListener1.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata, defaultCqrs.queries);
+                        expect(defaultListener1.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata);
                         expect(defaultListener2.callback).toHaveBeenCalled();
-                        expect(defaultListener2.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata, defaultCqrs.queries);
+                        expect(defaultListener2.callback).toHaveBeenCalledWith(defaultPayload, defaultMetadata);
                     });
                 });
             });
@@ -281,73 +281,83 @@ describe('given a default cqrs instance', function() {
         });
     });
 
-    describe('when cqrs#quey is called', function() {
-        var query1, query1Name, query1Function, query2, query2Name, query2Function;
+    describe('when cqrs#call is called', function() {
+        var query1, query1Name, query1TechName, query1Function, query2, query2Name, query2TechName, query2Function;
 
         beforeEach(function() {
             query1Name = 'query1Name';
+            query1TechName = [defaultNamespace, 'qry', query1Name].join('-');
             query1Function = jasmine.createSpy('query1Function');
             var query1 = {
                 owner: defaultOwner,
-                namespace: defaultNamespace,
-                queryName: query1Name,
+                queryName: query1TechName,
                 queryFunction: query1Function
             };
             defaultQueries.push(query1);
             query2Name = 'query2Name';
+            query2TechName = [defaultNamespace, 'qry', query2Name].join('-');
             query2Function = jasmine.createSpy('query2Function');
             var query2 = {
                 owner: defaultOwner,
-                namespace: defaultNamespace,
-                queryName: query2Name,
+                queryName: query2TechName,
                 queryFunction: query2Function
             };
             defaultQueries.push(query2);
         });
 
-        it('should return all queries', function() {
-            var queries = defaultCqrs.queries();
-            expect(typeof queries.query1Name).toBe('function');
-            expect(typeof queries.query2Name).toBe('function');
+        describe('when cqrs#call("query1Name", true) is called', function() {
+            var p;
+            beforeEach(function(done) {
+                p = defaultCqrs.call(query1Name, true);
+                p.then(done, done)
+            });
+
+            it('should invoke quer1Name', function() {
+                expect(query1Function).toHaveBeenCalled();
+                expect(query1Function).toHaveBeenCalledWith(true);
+            });
         });
 
-        it('should invoke quer1Name', function(done) {
-            var p = defaultCqrs.queries().query1Name();
-            expect(typeof p.then).toBe('function');
-            function always() {
-                expect(query1Function).toHaveBeenCalled();
-                done();
-            }
-            p.then(always, always);
+        describe('when cqrs#call("query2Name", true) is called', function() {
+            var p;
+            beforeEach(function(done) {
+                p = defaultCqrs.call(query2Name, true);
+                p.then(done, done)
+            });
+
+            it('should invoke quer1Name', function() {
+                expect(query2Function).toHaveBeenCalled();
+                expect(query2Function).toHaveBeenCalledWith(true);
+            });
         });
 
     });
 
-    describe('when cqrs#quey(queryName, queryFunction) is called', function() {
-        var query1Name, query1Function, query2Name, query2Function;
+    describe('when cqrs#register(queryName, queryFunction) is called', function() {
+        var query1Name, query1TechName, query1Function, query2Name, query2TechName, query2Function;
 
         beforeEach(function() {
             query1Name = 'query1Name';
+            query1TechName = [defaultNamespace, 'qry', query1Name].join('-');
             query1Function = jasmine.createSpy('query1Function');
             query2Name = query1Name;
+            query2TechName = [defaultNamespace, 'qry', query2Name].join('-');
             query2Function = jasmine.createSpy('query2Function');
         });
 
         it('should register query1', function() {
-            defaultCqrs.queries(query1Name, query1Function);
+            defaultCqrs.register(query1Name, query1Function);
             expect(defaultQueries.length).toBe(1);
             expect(defaultQueries[0].owner).toBe(defaultOwner);
-            expect(defaultQueries[0].namespace).toBe(defaultNamespace);
             expect(defaultQueries[0].queryName).toBe(query1Name);
             expect(defaultQueries[0].queryFunction).toBe(query1Function);
         });
 
         it('should not register query2', function() {
-            defaultCqrs.queries(query1Name, query1Function);
-            defaultCqrs.queries(query2Name, query2Function);
+            defaultCqrs.register(query1Name, query1Function);
+            defaultCqrs.register(query2Name, query2Function);
             expect(defaultQueries.length).toBe(1);
             expect(defaultQueries[0].owner).toBe(defaultOwner);
-            expect(defaultQueries[0].namespace).toBe(defaultNamespace);
             expect(defaultQueries[0].queryName).toBe(query1Name);
             expect(defaultQueries[0].queryFunction).toBe(query1Function);
         });

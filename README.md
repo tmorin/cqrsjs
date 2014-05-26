@@ -57,7 +57,7 @@ Owner value must not be shared between instances.
 ```
 var foo = cqrs({
     owner: 'myCqrsInstance'
-}); // -> return an instance having the owner value myCqrsInstance
+});
 ```
 
 A namespace can also be given as parameter.
@@ -69,80 +69,52 @@ It's the same mechanism for event, aggregate and queries.
 ```
 var bar = cqrs({
     namespace: 'myNamespace'
-}); // -> return an instance attached to the namespace myNamespace
+});
 // The instances foo and bar are unable to communicate together.
 ```
 
 ## Send a command
 
 ```
-// using the linked API
-cqrs().send('command1', payload, metadata);
-// -> return a promise, resolved or not according to the handler implementation
-```
-
-```
 // using the callback API
-cqrs(function (send, handle, publish, listen, aggregate, queries) {
+cqrs(function (send, handle, publish, listen, aggregate, call, register) {
     send('command1', payload, metadata);
     // -> return a promise, resolved or not according to the handler implementation
-}); // -> return the current cqrs instance
+});
 ```
 
 ## Handle a command
 
 ```
-// using the linked API
-cqrs().handle('command1', function(payload, metadata, queries) {
-    // do some stuff with payload and metadata
-    // can return a promise
-}); // -> return the current cqrs instance
-```
-
-```
 // using the callback API
-cqrs(function (send, handle, publish, listen, aggregate, queries) {
+cqrs(function (send, handle, publish, listen, aggregate, call, register) {
     handle('command1', function(payload, metadata, queries) {
         // do some stuff with payload and metadata
         // can return a promise
-    }); // -> return the current cqrs instance
-}); // -> return the current cqrs instance
+    });
+});
 ```
 
 ## Publish an event
 
 ```
-// using the linked API
-cqrs().publish('event1', payload, metadata);
-// -> return a promise, resolved or not according to the listeners implementation
-```
-
-```
 // using the callback API
-cqrs(function (send, handle, publish, listen, aggregate, queries) {
+cqrs(function (send, handle, publish, listen, aggregate, call, register) {
     publish('event1', payload, metadata);
     // -> return a promise, resolved or not according to the listeners implementation
-}); // -> return the current cqrs instance
+});
 ```
 
 ## Listen an event
 
 ```
-// using the linked API
-cqrs().listen('event1', function(payload, metadata) {
-    // do some stuff with payload and metadata
-    // can return a promise
-}); // -> return the current cqrs instance
-```
-
-```
 // using the callback API
-cqrs(function (send, handle, publish, listen, aggregate, queries) {
+cqrs(function (send, handle, publish, listen, aggregate, call, register) {
     listen('event1', function(payload, metadata) {
         // do some stuff with payload and metadata
         // can return a promise
-    }); // -> return the current cqrs instance
-}); // -> return the current cqrs instance
+    });
+});
 ```
 
 ## Work with aggregates
@@ -199,26 +171,32 @@ Moreover, about roll backing, it should be have only one aggregate listener by a
 The implementation of the command handlers and aggregate listeners can be done like this:
 
 ```
-cqrs().aggregate('items')
-    .handle('addItem', function(payload, metadata, queries, apply) {
-        return queries().isItemLabelNotIntoTheList(payload.label).then(function () {
-            return apply('itemAdded' payload, metadata),
+cqrs(function (send, handle, publish, listen, aggregate, call, register) {
+    aggregate('items', function (handle, listen) {
+        handle('addItem', function(payload, metadata, queries, apply) {
+            return queries().isItemLabelNotIntoTheList(payload.label).then(function () {
+                return apply('itemAdded' payload, metadata),
+            });
+        });
+        listen('itemAdded', function(payload, metadata, queries, apply) {
+            // persist data
+            // return promise if needed
         });
     });
-    .listen('itemAdded', function(payload, metadata, queries, apply) {
-        // persist data
-        // return promise if needed
-    });
-cqrs().aggregate('items')
-    .handle('markItemBought', function(payload, metadata, queries, apply) {
-        return queries().isItemLabelNotIntoTheList(payload.label).then(function () {
-            return apply('itemAdded' payload, metadata),
+});
+cqrs(function (send, handle, publish, listen, aggregate, call, register) {
+    aggregate('items', function (handle, listen) {
+        handle('markItemBought', function(payload, metadata, queries, apply) {
+            return queries().isItemLabelNotIntoTheList(payload.label).then(function () {
+                return apply('itemAdded' payload, metadata),
+            });
+        });
+        listen('itemMarkedBought', function(payload, metadata, queries, apply) {
+            // persist data
+            // return promise if needed
         });
     });
-    .listen('itemMarkedBought', function(payload, metadata, queries, apply) {
-        // persist data
-        // return promise if needed
-    });
+});
 ```
 
 About the suggestions aggregate, the main command will be:
@@ -231,23 +209,27 @@ To do that, the command has to consume a query: isSuggestionNotIntoTheList.
 If the suggestion is not into the list, the event suggestionAdded is applied.
 
 ```
-cqrs().aggregate('suggestions')
-    .handle('addSuggestion', function(payload, metadata, queries, apply) {
-        return queries().isSuggestionNotIntoTheList(payload).then(function () {
-            return apply('suggestionAdded' payload, metadata),
+cqrs(function (send, handle, publish, listen, aggregate, call, register) {
+    aggregate('suggestion', function (handle, listen) {
+        handle('addSuggestion', function(payload, metadata, queries, apply) {
+            return queries().isSuggestionNotIntoTheList(payload).then(function () {
+                return apply('suggestionAdded' payload, metadata),
+            });
         });
+        listen('suggestionAdded', function(payload, metadata, queries, apply) {
+            // persist data
+            // return promise if needed
+        });
+
     });
-    .listen('suggestionAdded', function(payload, metadata, queries, apply) {
-        // persist data
-        // return promise if needed
-    });
+});
 ```
 
 When an item is added into the list, the command addSuggestion should be sent.
 So, a component as to be defined in order to send the addSuggestion when the event itemAdded is published.
 
 ```
-cqrs(function (send, handle, publish, listen, aggregate, queries) {
+cqrs(function (send, handle, publish, listen, aggregate, call, register) {
     listen('suggestionAdded', function(payload, metadata, queries), function () {
         send('addSuggestion', payload.label, metadata).catch(function (error) {
             // error handling
@@ -263,79 +245,50 @@ The second one to update the auto-complete widget.
 ### Handle a command
 
 ```
-// using the linked API
-cqrs().aggregate('aggregate1').handle('command1', function(payload, metadata, queries, apply) {
-    // do some stuff with payload and metadata
-    // can return a promise
-}) // -> return the current aggregate instance
-```
-
-```
 // using the callback API
-cqrs(function (send, handle, publish, listen, aggregate, queries) {
+cqrs(function (send, handle, publish, listen, aggregate, call, register) {
     aggregate('aggregate1', function (handle, listen) {
         handle('command1', function(payload, metadata, queries, apply) {
             // do some stuff with payload and metadata
             // can return a promise
-        }); // -> return the current aggregate instance
-    }); // -> return the current aggregate instance
-}); // -> return the current cqrs instance
+        });
+    });
+});
 ```
 
 ### Listen a aggregate events
 
 ```
-// using the linked API
-cqrs().aggregate('aggregate1').listen('event1', function(payload, metadata) {
-    // do some stuff with payload and metadata
-    // can return a promise
-}) // -> return the current aggregate instance
-```
-
-```
 // using the callback API
-cqrs(function (send, handle, publish, listen, aggregate, queries) {
+cqrs(function (send, handle, publish, listen, aggregate, call, register) {
     aggregate('aggregate1', function (handle, listen) {
         listen('command1', function(payload, metadata) {
             // do some stuff with payload and metadata
             // can return a promise
-        }); // -> return the current aggregate instance
-    }); // -> return the current aggregate instance
-}); // -> return the current cqrs instance
+        });
+    });
+});
 ```
 
-## Provide queries
-
-```
-// using the linked API
-cqrs().queries('queryName', function() {
-    // do some stuff with YOUR arguments
-    // can return a promise
-}) // -> return the current cqrs instance
-```
+## register queries
 
 ```
 // using the callback API
-cqrs(function (send, handle, publish, listen, aggregate, queries) {
-    queries('queryName', function() {
+cqrs(function (send, handle, publish, listen, aggregate, call, register) {
+    register('queryName', function() {
         // do some stuff with YOUR arguments
         // can return a promise
-    }); // -> return the current cqrs instance
-}); // -> return the current cqrs instance
+    });
+});
 ```
 
-## Consume queries
-
-```
-// using the linked API
-cqrs().queries().queryName(arg1, arg2 /* whatever */); // -> return a promise
-```
+## call queries
 
 ```
 // using the callback API
-cqrs(function (send, handle, publish, listen, aggregate, queries) {
-    queries().queryName(arg1, arg2 /* whatever */); // -> return a promise
-}); // -> return the current cqrs instance
+cqrs(function (send, handle, publish, listen, aggregate, call, register) {
+    queries(queryName, arg1, arg2 /* whatever */); // -> return a promise
+});
 ```
 
 ## Memory leaks and destruction
