@@ -1,4 +1,3 @@
-
 (function(global, factory) {
 
     if (typeof define == 'function' && define.amd) {
@@ -138,7 +137,7 @@
         }
     }
 
-    function removeQuery(owner) {
+    function removeQueries(owner) {
         queriesRepo.filter(function (e) {
             return e.owner === owner;
         }).forEach(function (e) {
@@ -295,7 +294,7 @@
 
             function aggregateHandlerWrapper(callback) {
                 return function (payload, metadata) {
-                    callback(payload, metadata, apply);
+                    return callback(payload, metadata, apply);
                 };
             }
 
@@ -334,7 +333,7 @@
         exports.destroy = destroy;
 
         if (cqrsCb) {
-            cqrsCb(send, handle, publish, listen, aggregate, query, register);
+            cqrsCb(send, handle, publish, listen, aggregate, call, register);
         }
 
         return exports;
