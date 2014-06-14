@@ -1,6 +1,9 @@
 {
   "name": "cqrsjs-master",
   "version": "0.2.0",
+  "main": [
+      "src/cqrs.js"
+  ],
   "dependencies": {},
   "devDependencies": {
     "jasmine": "~2.0.0",
