@@ -1,19 +1,21 @@
-(function(global, factory) {
+/*
+ * cqrsjs
+ * Thibault Morin
+ * @license MIT
+ */
+(function (root, factory) {
+    /* globals define:false */
+    'use strict';
 
-    if (typeof define == 'function' && define.amd) {
-        define(function() {
-            return factory(global);
-        });
-    } else if (typeof module !== 'undefined') {
-        module.exports = factory(global);
-    } else if (typeof global.exports !== 'undefined') {
-        exports.cqrs = factory(global);
+    /* istanbul ignore next */
+    if (typeof define === 'function' && define.amd) {
+        define('cqrsjs', [], factory);
+    } else if (typeof exports === 'object') {
+        module.exports = factory();
     } else {
-        global.cqrs = factory(global);
+        root.cqrs = factory();
     }
-
-}(this, function(global) {
-
+}(this, function () {
     'use strict';
 
     var handlersRepo = [],
@@ -21,6 +23,13 @@
         aggregatesRepo = [],
         queriesRepo = [],
         counter = 0;
+
+    function log() {
+        /* istanbul ignore next */
+        if (cqrs.debug) {
+            console.log.apply(console, arguments);
+        }
+    }
 
     // handlers' repo functions
     function addHandler(owner, commandName, callback) {
@@ -51,6 +60,7 @@
         if (commands.length > 0) {
             return commands[0];
         }
+        throw new Error('unable to find the handler ' + commandName);
     }
 
     // listeners' repo functions
@@ -109,16 +119,12 @@
 
     function listAggregateListeners(aggregateName, eventName) {
         return aggregatesRepo.filter(function (e) {
-            //console.log('listAggregateListeners filter', e.aggregateName, aggregateName);
             return e.aggregateName === aggregateName;
         }).map(function (e) {
-            //console.log('listAggregateListeners map', e);
             return e.listeners;
         }).reduce(function (a, b) {
-            //console.log('listAggregateListeners reduce', a, b);
             return a.concat(b);
         }, []).filter(function (l) {
-            //console.log('listAggregateListeners filter', l, l.eventName, eventName);
             return l.eventName === eventName;
         });
     }
@@ -147,9 +153,13 @@
     }
 
     function getQuery(queryName) {
-        return queriesRepo.filter(function (e) {
+        var queries = queriesRepo.filter(function (e) {
             return e.queryName === queryName;
-        })[0];
+        });
+        if (queries.length > 0) {
+            return queries[0];
+        }
+        throw new Error('unable to find the query ' + queryName);
     }
 
     // generate technical name for aggregate, command and event
@@ -161,163 +171,169 @@
     }
 
     // cqrs implementation
-    function cqrs(callback, params) {
-        var cqrsCb, owner, namespace, exports;
+    function cqrs(params) {
+        var owner, namespace, exports;
         exports = {};
-        cqrsCb = typeof callback === 'function' && callback;
-        params = typeof callback === 'function' ? params : callback;
-        owner = (params && params.owner) || ('owner-' + (counter++));
-        namespace = params && params.namespace;
-
-        function register(queryName, queryFunction) {
-            var qryName = generateTechnicalName(namespace, 'qry', queryName);
-            if (cqrs.debug) {
-                console.log('cqrs - add query %s:%s', owner, qryName);
-            }
-            addQuery(owner, queryName, queryFunction);
-            return exports;
-        }
-        exports.register = register;
-
-        function call() {
-            var args = Array.prototype.slice.call(arguments);
-            var queryName = args.shift();
-            var qryName = generateTechnicalName(namespace, 'qry', queryName);
-            if (cqrs.debug) {
-                console.log('cqrs - query - call query %s:%s', owner, qryName);
-            }
-            return new Promise(function (resolve, reject) {
-                var query = getQuery(qryName);
-                if (query) {
-                    try {
-                        var result = query.queryFunction.apply(global, args);
-                        resolve(result);
-                    } catch (e) {
-                        reject(e);
-                    }
-                } else {
-                    reject(new Error('unable to find the query: ' + qryName));
-                }
-            });
-        }
-        exports.call = call;
-
-        // to handle a command
-        function handle(commandName, callback) {
-            var cmdName = generateTechnicalName(namespace, 'cmd', commandName);
-            if (!getHandler(cmdName)) {
-                if (cqrs.debug) {
-                    console.log('cqrs - handle - add handler %s:%s', owner, cmdName);
-                }
-                addHandler(owner, cmdName, callback);
-            }
-            return exports;
-        }
-        exports.handle = handle;
+        params = params || {};
+        owner = params.owner || ('owner-' + (counter++));
+        namespace = params.namespace;
 
         // to send a command
         function send(commandName, payload, metadata) {
-            return new Promise(function (resolve, reject) {
-                var cmdName = generateTechnicalName(namespace, 'cmd', commandName);
+            var cmdName = generateTechnicalName(namespace, 'cmd', commandName);
+            return new Promise(function (resolve) {
                 var handler = getHandler(cmdName);
-                if (handler) {
-                    if (cqrs.debug) {
-                        console.log('cqrs - send - send command %s %o %o', cmdName, payload, metadata);
-                    }
-                    resolve(handler.callback(payload, metadata));
+                if (!metadata) {
+                    metadata = {
+                        sentOn: new Date()
+                    };
                 } else {
-                    reject(new Error('unable to found an handler'));
+                    metadata.sentOn = new Date();
                 }
+                log('cqrs - send - send command %s %o %o', cmdName, payload, metadata);
+                resolve(handler.callback(payload, metadata));
             });
         }
         exports.send = send;
 
-        // to listen an event
-        function listen(eventName, callback) {
-            var evtName = generateTechnicalName(namespace, 'evt', eventName);
-            if (cqrs.debug) {
-                console.log('cqrs - listen - add listener %s:%s', owner, evtName);
+        // to handle a command
+        function when(commandName) {
+            var exports = {};
+            var cmdName = generateTechnicalName(namespace, 'cmd', commandName);
+
+            function invoke(callback) {
+                log('cqrs - when - add handler %s:%s', owner, cmdName);
+                addHandler(owner, cmdName, callback);
             }
-            addListener(owner, evtName, callback);
+            exports.invoke = invoke;
+
             return exports;
         }
-        exports.listen = listen;
+        exports.when = when;
 
         // to publish an event
         function publish(eventName, payload, metadata) {
             var evtName = generateTechnicalName(namespace, 'evt', eventName);
-            if (cqrs.debug) {
-                console.log('cqrs - publish - publish event %s %o %o', evtName, payload, metadata);
-            }
             var listeners = listListeners(evtName);
-            var promises = listeners.map(function(listener) {
-                return new Promise(function (resolve, reject) {
-                    try {
-                        var result = listener.callback(payload, metadata);
-                        resolve(result);
-                    } catch (e) {
-                        reject(e);
-                    }
+            if (!metadata) {
+                metadata = {
+                    publishedOn: new Date()
+                };
+            } else {
+                metadata.publishedOn = new Date();
+            }
+            log('cqrs - publish - publish event %s %o %o', evtName, payload, metadata);
+            var promises = listeners.map(function (listener) {
+                return Promise.resolve().then(function () {
+                    return listener.callback(payload, metadata);
                 });
             });
             return Promise.all(promises);
         }
         exports.publish = publish;
 
-        // to register an aggregate
-        function aggregate(aggregateName, callback) {
-            var aggName = generateTechnicalName(namespace, 'agg', aggregateName);
+        // to listen an event
+        function on(eventName) {
             var exports = {};
+            var evtName = generateTechnicalName(namespace, 'evt', eventName);
 
-            // to publish an event from an aggregate
-            function apply(eventName, payload, metadata) {
-                var evtName = generateTechnicalName(namespace, 'evt', eventName);
-                if (cqrs.debug) {
-                    console.log('cqrs - aggregate apply - %s:%s:%s', owner, aggName, evtName);
-                }
-                var promises = listAggregateListeners(aggName, evtName).map(function (listener) {
-                    return new Promise(function (resolve, reject) {
-                        try {
-                            var result = listener.callback(payload, metadata);
-                            resolve(result);
-                        } catch (e) {
-                            reject(e);
-                        }
-                    });
-                });
-                return Promise.all(promises).then(function () {
-                    var result = publish(eventName, payload, metadata);
-                    return result;
-                });
+            function invoke(callback) {
+                log('cqrs - on - add listener %s:%s', owner, evtName);
+                addListener(owner, evtName, callback);
             }
-            exports.apply = apply;
+            exports.invoke = invoke;
 
-            function aggregateHandlerWrapper(callback) {
-                return function (payload, metadata) {
-                    return callback(payload, metadata, apply);
-                };
+            return exports;
+        }
+        exports.on = on;
+
+        // to register a query
+        function calling(queryName) {
+            var exports = {};
+            var qryName = generateTechnicalName(namespace, 'qry', queryName);
+
+            function invoke(queryFunction) {
+                log('cqrs - calling - add query %s:%s', owner, qryName);
+                addQuery(owner, qryName, queryFunction);
             }
+            exports.invoke = invoke;
+
+            return exports;
+        }
+        exports.calling = calling;
+
+        // to call a query
+        function call() {
+            var args = Array.prototype.slice.call(arguments);
+            var queryName = args.shift();
+            var qryName = generateTechnicalName(namespace, 'qry', queryName);
+            log('cqrs - call - call query %s:%s', owner, qryName);
+            return Promise.resolve().then(function () {
+                var query = getQuery(qryName);
+                return query.queryFunction.apply(null, args);
+            });
+        }
+        exports.call = call;
+
+        // to register an aggregate
+        function aggregate(aggregateName) {
+            var exports = {};
+            var aggName = generateTechnicalName(namespace, 'agg', aggregateName);
 
             // to handle a command from an aggregate
-            function aggregateHandler(commandName, callback) {
-                handle(commandName, aggregateHandlerWrapper(callback));
+            function aggregateWhen(commandName) {
+                var exports = {};
+                var cmdName = generateTechnicalName(namespace, 'cmd', commandName);
+
+                function invoke(callback) {
+                    var invokeExports = {};
+
+                    function apply(eventName) {
+                        var evtName = generateTechnicalName(namespace, 'evt', eventName);
+
+                        function callbackWrapper(payload, metadata) {
+                            var eventPayload = callback(payload, metadata);
+                            if (eventName && eventPayload) {
+                                metadata.appliedOn = new Date();
+                                log('cqrs - aggregate apply - %s:%s:%s', owner, aggName, evtName);
+                                var promises = listAggregateListeners(aggName, evtName).map(function (listener) {
+                                    return new Promise(function (resolve) {
+                                        resolve(listener.callback(eventPayload, metadata));
+                                    });
+                                });
+                                return Promise.all(promises).then(function () {
+                                    return publish(eventName, eventPayload, metadata);
+                                });
+                            }
+                        }
+                        log('cqrs - aggregate when - add handler %s:%s', owner, cmdName);
+                        addHandler(owner, cmdName, callbackWrapper);
+                        return exports;
+                    }
+                    invokeExports.apply = apply;
+                    return invokeExports;
+                }
+                exports.invoke = invoke;
+
                 return exports;
             }
-            exports.handle = aggregateHandler;
+            exports.when = aggregateWhen;
 
             // to listen an event from an aggregate
-            function aggregateListener(eventName, callback) {
+            function aggregateOn(eventName) {
+                var aggregateOnExports = {};
                 var evtName = generateTechnicalName(namespace, 'evt', eventName);
-                if (cqrs.debug) {
-                    console.log('cqrs - aggregate listener - add listener %s:%s:%s', owner, aggName, evtName);
-                }
-                addAggregateListener(owner, aggName, evtName, callback);
-            }
-            exports.listen = aggregateListener;
 
-            if (callback) {
-                callback(aggregateHandler, aggregateListener);
+                function invoke(callback) {
+                    log('cqrs - on - add listener %s:%s', owner, evtName);
+                    addAggregateListener(owner, aggName, evtName, callback);
+                    return exports;
+                }
+                aggregateOnExports.invoke = invoke;
+
+                return aggregateOnExports;
             }
+            exports.on = aggregateOn;
 
             return exports;
         }
@@ -331,10 +347,6 @@
             removeQueries(owner);
         }
         exports.destroy = destroy;
-
-        if (cqrsCb) {
-            cqrsCb(send, handle, publish, listen, aggregate, call, register);
-        }
 
         return exports;
     }

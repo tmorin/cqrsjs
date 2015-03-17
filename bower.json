@@ -1,12 +1,8 @@
 {
   "name": "cqrsjs-master",
-  "version": "0.2.0",
+  "version": "0.2.0-beta.0",
   "main": [
-      "src/cqrs.js"
+      "dist/cqrs.js"
   ],
-  "dependencies": {},
-  "devDependencies": {
-    "jasmine": "~2.0.0",
-    "promise-polyfill": "~1.1.0"
-  }
+  "dependencies": {}
 }
