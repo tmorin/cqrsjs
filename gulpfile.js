@@ -5,14 +5,14 @@ var gulp = require('gulp');
 var runSequence = require('run-sequence');
 var gp = require('auto-plug')();
 
-gulp.task('jshint', function() {
+gulp.task('jshint', function () {
     return gulp.src(['lib/**/*.js', 'test/**/*.js', 'gulpfile.js'])
         .pipe(gp.jshint())
         .pipe(gp.jshint.reporter('jshint-stylish'))
         .pipe(gp.jshint.reporter('fail'));
 });
 
-gulp.task('min', function() {
+gulp.task('min', function () {
     return gulp.src(['lib/**/*.js'])
         .pipe(gp.sourcemaps.init())
         .pipe(gp.uglify({
@@ -25,22 +25,24 @@ gulp.task('min', function() {
         .pipe(gulp.dest('./dist'));
 });
 
-gulp.task('copy', function() {
+gulp.task('copy', function () {
     return gulp.src(['lib/**/*.js'])
-        .pipe(gp.jsbeautifier({config: '.jsbeautifyrc'}))
+        .pipe(gp.jsbeautifier({
+            config: '.jsbeautifyrc'
+        }))
         .pipe(gulp.dest('./dist'));
 });
 
-gulp.task('test', function() {
+gulp.task('test', function () {
     return gulp.src(['lib/**/*.js'])
-    .pipe(gp.istanbul())
-    .pipe(gp.istanbul.hookRequire())
-    .on('finish', function() {
-        gulp.src(['test/**/*.js']).pipe(gp.mocha()).pipe(gp.istanbul.writeReports());
-    });
+        .pipe(gp.istanbul())
+        .pipe(gp.istanbul.hookRequire())
+        .on('finish', function () {
+            gulp.src(['test/**/*.js']).pipe(gp.mocha()).pipe(gp.istanbul.writeReports());
+        });
 });
 
-gulp.task('coverall', function() {
+gulp.task('coverall', function () {
     return gulp.src('coverage/**/lcov.info')
         .pipe(gp.coveralls());
 });
