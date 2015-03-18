@@ -17,7 +17,7 @@
         "url": "git://github.com/tmorin/cqrsjs.git"
     },
     "scripts": {
-        "test": "./node_modules/.bin/gulp ci:build"
+        "test": "./node_modules/.bin/gulp travis"
     },
     "dependencies": {
         "es6-shim": "^0.25.2"
