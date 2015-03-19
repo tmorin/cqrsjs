@@ -1,8 +1,14 @@
 {
-  "name": "cqrsjs-master",
-  "version": "0.2.0-beta.0",
-  "main": [
-      "dist/cqrs.js"
-  ],
-  "dependencies": {}
+    "name": "cqrsjs-master",
+    "main": [
+        "dist/cqrs.js"
+    ],
+    "license": "MIT",
+    "authors": [
+        "Thibault Morin (https://tmorin.github.io)"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/tmorin/cqrsjs.git"
+    }
 }
