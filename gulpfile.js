@@ -42,6 +42,15 @@ gulp.task('test', function () {
         });
 });
 
+gulp.task('test-shoplist', function () {
+    return gulp.src(['example/shoplist/lib/**/*.js'])
+        .pipe(gp.istanbul())
+        .pipe(gp.istanbul.hookRequire())
+        .on('finish', function () {
+            gulp.src(['example/shoplist/test/**/*.js']).pipe(gp.mocha()).pipe(gp.istanbul.writeReports());
+        });
+});
+
 gulp.task('coverall', function () {
     return gulp.src('coverage/**/lcov.info')
         .pipe(gp.coveralls());

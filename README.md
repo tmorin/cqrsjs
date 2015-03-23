@@ -25,6 +25,24 @@ If not ... it's a bug.
 cqrs means _Command and Query Responsibility Segregation_.
 It's coming from far away, so [Wikipedia](http://en.wikipedia.org/wiki/Command%E2%80%93query_separation) will be a better place to know more about it.
 
+## Install
+
+```shell
+npm install --save cqrs.js
+```
+
+```shell
+bower install --save cqrs.js
+```
+
+```javascript
+require(['cqrsjs', ...
+```
+
+## Example
+
+- [shoplist](example/shoplist)
+
 ## Documentation
 
 - [play with cqrsjs](doc/play-with-cqrsjs.md)
