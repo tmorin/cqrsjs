@@ -51,8 +51,8 @@ gulp.task('test-shoplist', function () {
         });
 });
 
-gulp.task('coverall', function () {
-    return gulp.src('coverage/**/lcov.info')
+gulp.task('coveralls', function () {
+    return gulp.src('coverage/lcov.info')
         .pipe(gp.coveralls());
 });
 
@@ -61,5 +61,5 @@ gulp.task('build', function (callback) {
 });
 
 gulp.task('travis', function (callback) {
-    return runSequence('jshint', 'test', 'coverall', callback);
+    return runSequence('jshint', 'test', 'coveralls', callback);
 });
