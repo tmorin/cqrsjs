@@ -3,7 +3,7 @@ require('es6-shim');
 
 var gulp = require('gulp');
 var runSequence = require('run-sequence');
-var gp = require('auto-plug')();
+var gp = require('auto-plug')('gulp');
 
 gulp.task('jshint', function () {
     return gulp.src(['lib/**/*.js', 'test/**/*.js', 'gulpfile.js'])
