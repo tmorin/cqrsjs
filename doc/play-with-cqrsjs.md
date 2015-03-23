@@ -45,6 +45,14 @@ var bar = cqrs({
 });
 ```
 
+## Debugging
+
+For debugging purpose cqrsjs can be configured to log information.
+
+```javascript
+cqrs.debug = true;
+```
+
 ## Memory leaks and destruction
 
 Each cqrs instance can be destroyed on demand calling the `destroy` method.
