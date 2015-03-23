@@ -60,6 +60,6 @@ gulp.task('build', function (callback) {
     return runSequence('jshint', 'test', ['copy', 'min'], callback);
 });
 
-gulp.task('travis', function (callback) {
+gulp.task('ci', function (callback) {
     return runSequence('jshint', 'test', 'coveralls', callback);
 });

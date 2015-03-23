@@ -17,7 +17,7 @@
     "url": "git://github.com/tmorin/cqrsjs.git"
   },
   "scripts": {
-    "test": "./node_modules/.bin/gulp travis"
+    "test": "./node_modules/.bin/gulp ci"
   },
   "devDependencies": {
     "auto-plug": "^1.0.1",
