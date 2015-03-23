@@ -106,6 +106,30 @@ describe('aggregate', function() {
                 });
             });
         });
+        describe('register a command handler (wîth promise) and an event listener', function() {
+            var handler, listener;
+            beforeEach(function() {
+                handler = sinon.stub();
+                handler.returns(Promise.resolve().then(function () {
+                    return {};
+                }));
+                agg1.when('command1').invoke(handler).apply('event1');
+                listener = sinon.spy();
+                agg1.on('event1').invoke(listener);
+                agg2.on('event1').invoke(listener);
+            });
+            describe('when a command is sent', function() {
+                beforeEach(function() {
+                    return defaultCqrs.send('command1', defaultPayload, defaultMetadata);
+                });
+                it('listener should be called twice', function() {
+                    /* jshint -W030 */
+                    listener.should.have.been.calledTwice;
+                    /* jshint +W030 */
+                    listener.should.have.been.calledWith(defaultPayload, defaultMetadata);
+                });
+            });
+        });
     });
 
 });
