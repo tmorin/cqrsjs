@@ -1,6 +1,6 @@
 # cqrsjs
 
-[![Build Status](https://travis-ci.org/tmorin/cqrsjs.svg)](https://travis-ci.org/tmorin/cqrsjs)
+[![Circle CI](https://circleci.com/gh/tmorin/cqrsjs.svg?style=svg)](https://circleci.com/gh/tmorin/cqrsjs)
 [![Dependency Status](https://david-dm.org/tmorin/cqrsjs.png)](https://david-dm.org/tmorin/cqrsjs)
 [![devDependency Status](https://david-dm.org/tmorin/cqrsjs/dev-status.png)](https://david-dm.org/tmorin/cqrsjs#info=devDependencies)
 [![Coverage Status](https://coveralls.io/repos/tmorin/cqrsjs/badge.svg)](https://coveralls.io/r/tmorin/cqrsjs)
