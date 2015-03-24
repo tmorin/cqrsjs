@@ -13,7 +13,7 @@ var aggregateInstance = cqrs().aggregate('aggregateName');
 ## Handle commands
 
 ```
-aggregateInstance.handle('commandName')
+aggregateInstance.when('commandName')
     .invoke(function (payload, command) {
         // handle the command
         // return something if you want to apply the linked event
@@ -81,23 +81,23 @@ Moreover, about roll backing, it should be have only one aggregate listener by a
 The implementation of the command handlers and aggregate listeners can be done like this:
 
 ```
-cqrs.aggregate('items')
-    .handle('addItem').invoke(function(payload, metadata) {
+cqrs().aggregate('items')
+    .when('addItem').invoke(function(payload, metadata) {
         return cqrs.call('isItemLabelNotIntoTheList', payload.label).then(function () {
             return payload;
         });
     }).apply('itemAdded')
-    .listen('itemAdded').invoke(function(payload, metadata) {
+    .on('itemAdded').invoke(function(payload, metadata) {
         // persist data
         // return promise if needed
     });
-cqrs.aggregate('items')
-    .handle('markItemBought').apply(function(payload, metadata) {
+cqrs().aggregate('items')
+    .when('markItemBought').apply(function(payload, metadata) {
         return cqrs.call('isItemNotBought', payload.label).then(function () {
             return payload,
         });
     }).apply('itemMarkedBought')
-    .listen('itemMarkedBought'.apply(function(payload, metadata) {
+    .on('itemMarkedBought'.apply(function(payload, metadata) {
         // persist data
         // return promise if needed
     });
@@ -113,13 +113,13 @@ To do that, the command has to consume a query: _isSuggestionNotIntoTheList_.
 If the suggestion is not into the list, the event _suggestionAdded_ is applied.
 
 ```
-cqrs.aggregate('suggestions')
-    .handle('addSuggestion').invoke(function(payload, metadata) {
+cqrs().aggregate('suggestions')
+    .when('addSuggestion').invoke(function(payload, metadata) {
         return cqrs.call('isSuggestionNotIntoTheList', payload).then(function () {
             return payload;
         });
     }).apply('suggestionAdded')
-    .listen('suggestionAdded').invoke(function(payload, metadata) {
+    .on('suggestionAdded').invoke(function(payload, metadata) {
         // persist data
         // return promise if needed
     });
@@ -129,7 +129,7 @@ When an item is added into the list, the command _addSuggestion_ should be sent.
 So, a component as to be defined in order to send the _addSuggestion_ when the event _itemAdded_ is published.
 
 ```
-cqrs.on('itemAdded').invoke(function (payload, metadata) {
+cqrs().on('itemAdded').invoke(function (payload, metadata) {
     cqrs.send('addSuggestion', payload.label, metadata).catch(function (error) {
         // handle error
     });

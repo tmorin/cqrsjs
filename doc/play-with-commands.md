@@ -20,7 +20,7 @@ The callback has two arguments:
 - the metadata, it will be never null
 
 ```
-cqrs().handle('commandName').invoke(function (payload, metadata) {
+cqrs().when('commandName').invoke(function (payload, metadata) {
     // do some stuff with payload and metadata
     // can return a promise
 });
