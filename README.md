@@ -42,6 +42,7 @@ require(['cqrsjs', ...
 ## Example
 
 - [shoplist](example/shoplist)
+- [kanban](example/kanban)
 
 ## Documentation
 
