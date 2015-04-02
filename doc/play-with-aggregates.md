@@ -18,13 +18,28 @@ aggregateInstance.when('commandName')
         // handle the command
         // return something if you want to apply the linked event
     })
-    .apply('eventName');
+    .apply('eventName', 'anotherEventName');
+```
+
+## Handle events
+
+```
+aggregateInstance.when('eventName')
+    .invoke(function (payload, command) {
+        // handle the command
+        // return something if you want to apply the linked event
+    })
+    .apply('eventName', 'anotherEventName');
 ```
 
 ## Listen a aggregate events
 
 ```
 aggregateInstance.on('eventName')
+    .invoke(function (payload, command) {
+        // handle the event
+    });
+aggregateInstance.on('anotherEventName')
     .invoke(function (payload, command) {
         // handle the event
     });
@@ -134,6 +149,17 @@ cqrs().on('itemAdded').invoke(function (payload, metadata) {
         // handle error
     });
 });
+```
+
+However, the code above could be done directly into the aggregate _suggestion_.
+
+```
+cqrs().aggregate('suggestions')
+    .when('itemAdded').invoke(function (payload, metadata) {
+        return cqrs.call('isSuggestionNotIntoTheList', payload.label).then(function () {
+            return payload.label;
+        });
+    }).apply('suggestion-added);
 ```
 
 Others components should be created in order to handle the UI parts.
