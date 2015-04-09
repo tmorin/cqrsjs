@@ -1,6 +1,6 @@
 {
   "name": "cqrs.js",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "keywords": [],
   "homepage": "https://github.com/tmorin/cqrsjs",
   "bugs": {
