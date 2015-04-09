@@ -1,9 +1,9 @@
 # Change logs
 
-## latest
-
 ## 0.2.4
 - fix documentation
+- bug fix
+- add kanban example
 
 ## 0.2.2
 - review documentation
