@@ -28,7 +28,9 @@ describe('command', function() {
             owner: defaultOwner,
             namespace: defaultNamespace
         });
-        defaultPayload = {};
+        defaultPayload = {
+            test: 'test'
+        };
         defaultMetadata = {};
     });
 
@@ -39,13 +41,14 @@ describe('command', function() {
     describe('register twice a command handler', function() {
         var callback;
         beforeEach(function() {
-            callback = sinon.spy();
+            callback = sinon.stub();
+            callback.returnsArg(0);
             defaultCqrs.when('command1').invoke(callback);
             defaultCqrs.when('command1').invoke(callback);
         });
         describe('when a command is sent', function() {
             beforeEach(function() {
-                return defaultCqrs.send('command1', defaultPayload, defaultMetadata);
+                return defaultCqrs.send('command1', defaultPayload, defaultMetadata).should.become(defaultPayload);
             });
             it('should be called only once', function() {
                 /* jshint -W030 */
@@ -56,7 +59,7 @@ describe('command', function() {
         });
         describe('when a command is sent whithout', function() {
             beforeEach(function() {
-                return defaultCqrs.send('command1', defaultPayload);
+                return defaultCqrs.send('command1', defaultPayload).should.become(defaultPayload);
             });
             it('should be called with a non null metadata', function() {
                 callback.should.have.been.calledWith(defaultPayload, sinon.match.object);

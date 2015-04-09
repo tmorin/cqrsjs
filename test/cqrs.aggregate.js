@@ -16,7 +16,7 @@ describe('aggregate', function() {
     var defaultCqrs, defaultOwner, defaultNamespace, defaultHandlers, defaultListeners, defaultAggregates, defaultQueries, defaultPayload, defaultMetadata;
 
     beforeEach(function() {
-        cqrs.debug = true;
+        cqrs.debug = false;
         defaultOwner = 'defaultCqrsInstance';
         defaultNamespace = 'defaultNamespace';
         defaultHandlers = [];
@@ -28,7 +28,9 @@ describe('aggregate', function() {
             owner: defaultOwner,
             namespace: defaultNamespace
         });
-        defaultPayload = {};
+        defaultPayload = {
+            test: 'test'
+        };
         defaultMetadata = {};
     });
 
@@ -59,7 +61,7 @@ describe('aggregate', function() {
             });
             describe('when a command is sent', function() {
                 beforeEach(function() {
-                    return defaultCqrs.send('command1', defaultPayload, defaultMetadata);
+                    return defaultCqrs.send('command1', defaultPayload, defaultMetadata).should.become(defaultPayload);
                 });
                 it('handler should be called only once', function() {
                     /* jshint -W030 */
@@ -82,7 +84,7 @@ describe('aggregate', function() {
             });
             describe('when a command is sent', function() {
                 beforeEach(function() {
-                    return defaultCqrs.send('command1', defaultPayload, defaultMetadata);
+                    return defaultCqrs.send('command1', defaultPayload, defaultMetadata).should.become(defaultPayload);
                 });
                 it('handler should be called only once', function() {
                     /* jshint -W030 */
@@ -99,7 +101,7 @@ describe('aggregate', function() {
             });
             describe('when a command is sent without metadata', function() {
                 beforeEach(function() {
-                    return defaultCqrs.send('command1', defaultPayload);
+                    return defaultCqrs.send('command1', defaultPayload).should.become(defaultPayload);
                 });
                 it('handler should be called with a non null metadata', function() {
                     handler.should.have.been.calledWith(defaultPayload, sinon.match.object);
@@ -121,7 +123,7 @@ describe('aggregate', function() {
             });
             describe('when a command is sent', function() {
                 beforeEach(function() {
-                    return defaultCqrs.send('command1', defaultPayload, defaultMetadata);
+                    return defaultCqrs.send('command1', defaultPayload, defaultMetadata).should.become(defaultPayload);
                 });
                 it('handler1 should be called only once', function() {
                     /* jshint -W030 */
@@ -144,9 +146,9 @@ describe('aggregate', function() {
             });
         });
         describe('register a command handler (for each applying) and an event listener', function() {
-            var handler, listener1, listener2, payload;
+            var handler, listener1, listener2;
             beforeEach(function() {
-                payload = ['a', 'b', 'c'];
+                defaultPayload = ['a', 'b', 'c'];
                 handler = sinon.stub();
                 handler.returnsArg(0);
                 agg1.when('command1').invoke(handler).forEach().apply('event1', 'event1bis');
@@ -157,13 +159,13 @@ describe('aggregate', function() {
             });
             describe('when a command is sent', function() {
                 beforeEach(function() {
-                    return defaultCqrs.send('command1', payload, defaultMetadata);
+                    return defaultCqrs.send('command1', defaultPayload, defaultMetadata).should.become(defaultPayload);
                 });
                 it('handler should be called only once', function() {
                     /* jshint -W030 */
                     handler.should.have.been.calledOnce;
                     /* jshint +W030 */
-                    handler.should.have.been.calledWith(payload, defaultMetadata);
+                    handler.should.have.been.calledWith(defaultPayload, defaultMetadata);
                 });
                 it('listener1 should be called thrice', function() {
                     /* jshint -W030 */
@@ -184,7 +186,7 @@ describe('aggregate', function() {
             });
             describe('when a command is sent without payload', function() {
                 beforeEach(function() {
-                    return defaultCqrs.send('command1');
+                    return defaultCqrs.send('command1').should.become(sinon.match.undefined);
                 });
                 it('handler should be called with a non null metadata', function() {
                     handler.should.have.been.calledWith(sinon.match.undefined, sinon.match.object);
@@ -196,7 +198,7 @@ describe('aggregate', function() {
             beforeEach(function() {
                 handler = sinon.stub();
                 handler.returns(Promise.resolve().then(function() {
-                    return {};
+                    return defaultPayload;
                 }));
                 agg1.when('command1').invoke(handler).apply('event1');
                 listener = sinon.spy();
@@ -205,7 +207,7 @@ describe('aggregate', function() {
             });
             describe('when a command is sent', function() {
                 beforeEach(function() {
-                    return defaultCqrs.send('command1', defaultPayload, defaultMetadata);
+                    return defaultCqrs.send('command1', defaultPayload, defaultMetadata).should.become(defaultPayload);
                 });
                 it('listener should be called twice', function() {
                     /* jshint -W030 */
