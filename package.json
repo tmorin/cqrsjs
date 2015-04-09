@@ -39,10 +39,10 @@
     "gulp-uglify": "^1.1.0",
     "jshint-stylish": "^1.0.1",
     "node-localstorage": "^0.5.0",
+    "restify": "^3.0.1",
     "run-sequence": "^1.0.2",
     "sinon": "^1.14.1",
     "sinon-chai": "^2.7.0",
-    "tcomb": "^1.0.1",
     "uuid": "^2.0.1"
   },
   "engines": {

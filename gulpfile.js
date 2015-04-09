@@ -6,7 +6,7 @@ var runSequence = require('run-sequence');
 var gp = require('auto-plug')('gulp');
 
 gulp.task('jshint', function () {
-    return gulp.src(['lib/**/*.js', 'test/**/*.js', 'gulpfile.js'])
+    return gulp.src(['lib/**/*.js', 'test/**/*.js', 'example/**/*.js', 'gulpfile.js'])
         .pipe(gp.jshint())
         .pipe(gp.jshint.reporter('jshint-stylish'))
         .pipe(gp.jshint.reporter('fail'));
@@ -58,6 +58,44 @@ gulp.task('test-kanban', function () {
         .on('finish', function () {
             gulp.src(['example/kanban/test/**/*.js']).pipe(gp.mocha()).pipe(gp.istanbul.writeReports());
         });
+});
+
+gulp.task('serve-kanban', function (done) {
+    var server = require('./example/kanban/lib/server');
+    var storage = require('./example/kanban/lib/storage').local;
+    storage.clear();
+    storage.setItem('rights', JSON.stringify({
+        admin: {
+            roles: ['admin']
+        }
+    }));
+    storage.setItem('persons', JSON.stringify({
+        admin: {
+            personId: 'admin',
+            name: 'administrator'
+        }
+    }));
+    require('./example/kanban/lib/domain/boards.handlers');
+    require('./example/kanban/lib/domain/boards.repo.local');
+    require('./example/kanban/lib/domain/cards.handlers');
+    require('./example/kanban/lib/domain/cards.repo.local');
+    require('./example/kanban/lib/domain/columns.handlers');
+    require('./example/kanban/lib/domain/columns.repo.local');
+    require('./example/kanban/lib/domain/members.handlers');
+    require('./example/kanban/lib/domain/members.repo.local');
+    require('./example/kanban/lib/domain/persons.handlers');
+    require('./example/kanban/lib/domain/persons.repo.local');
+    require('./example/kanban/lib/domain/rights.handlers');
+    require('./example/kanban/lib/domain/rights.repo.local');
+    require('./example/kanban/lib/domain/rooms.handlers');
+    require('./example/kanban/lib/domain/rooms.repo.local');
+    require('./example/kanban/lib/domain/teams.handlers');
+    require('./example/kanban/lib/domain/teams.repo.local');
+    require('./example/kanban/lib/api/persons');
+    server.listen(8080, function() {
+        console.log('%s listening at %s', server.name, server.url);
+        done();
+    });
 });
 
 gulp.task('coveralls', function () {

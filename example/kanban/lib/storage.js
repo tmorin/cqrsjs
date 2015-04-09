@@ -1,0 +1,1 @@
+exports.local = new require('node-localstorage').LocalStorage('./localstorage');

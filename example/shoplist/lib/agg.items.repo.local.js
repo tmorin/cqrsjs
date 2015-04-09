@@ -1,5 +1,5 @@
 (function(root, factory) {
-    /* globals define:false */
+    /* globals define:false, module:false */
     'use strict';
     /* istanbul ignore next */
     if (typeof define === 'function' && define.amd) {
@@ -46,31 +46,31 @@
     itemsAgg.on('itemAdded').invoke(function(payload) {
         var items = getItems();
         items[payload.label] = payload;
-        setItems(items)
+        setItems(items);
     });
 
     itemsAgg.on('itemRemoved').invoke(function(payload) {
         var items = getItems();
         delete items[payload.label];
-        setItems(items)
+        setItems(items);
     });
 
     itemsAgg.on('quantityItemUpdated').invoke(function(payload) {
         var items = getItems();
         items[payload.label].quantity = payload.quantity;
-        setItems(items)
+        setItems(items);
     });
 
     itemsAgg.on('itemMarked').invoke(function(payload) {
         var items = getItems();
         items[payload.label].marked = true;
-        setItems(items)
+        setItems(items);
     });
 
     itemsAgg.on('itemUnmarked').invoke(function(payload) {
         var items = getItems();
         items[payload.label].marked = false;
-        setItems(items)
+        setItems(items);
     });
 
     return domain;

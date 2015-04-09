@@ -1,54 +1,61 @@
-var t = require('tcomb');
-var uuid = require('uuid');
-var cqrs = require('../../../lib/cqrs');
+var storage = require('../storage').local;
+var cqrs = require('../../../../lib/cqrs');
 var c = cqrs();
+
+function loadData() {
+    return JSON.parse(storage.getItem('members')) || [];
+}
+
+function persistData(members) {
+    storage.setItem('members', JSON.stringify(members));
+}
 
 /* AGGREGATE */
 
-var membersAgg = c.aggregate('members')
+var membersAgg = c.aggregate('members');
 
 membersAgg.on('member-added').invoke(function(payload) {
-    var members = JSONStorage.getItem('members') || [];
+    var members = loadData();
     members.push(payload);
-    JSONStorage.setItem('members', members);
+    persistData(members);
 });
 
 membersAgg.on('member-updated').invoke(function(payload) {
-    var members = JSONStorage.getItem('members') || [];
+    var members = loadData();
     var member = members.filter(function(member) {
         return member.teamId === payload.teamId && member.personId === payload.personId;
     })[0];
     member.teamName = payload.teamName;
     member.personName = payload.personName;
-    JSONStorage.setItem('members', members);
+    persistData(members);
 });
 
 membersAgg.on('member-removed').invoke(function(payload) {
-    var members = JSONStorage.getItem('members') || [];
+    var members = loadData();
     var member = members.filter(function(member) {
         return member.teamId === payload.teamId && member.personId === payload.personId;
     })[0];
-    var index = members.indexOf(members);
+    var index = members.indexOf(member);
     members.splice(index, 1);
-    JSONStorage.setItem('members', members);
+    persistData(members);
 });
 
 /* QUERIES */
 
-c.calling('is-not-member').invoke(function(teamId, personId) {
-    var members = JSONStorage.getItem('members') || [];
+c.calling('is-person-not-member-of-team').invoke(function(teamId, personId) {
+    var members = loadData();
     var member = members.filter(function(member) {
-        return member.teamId === payload.teamId && member.personId === payload.personId;
+        return member.teamId === teamId && member.personId === personId;
     })[0];
     if (member) {
         throw new Error(member.personName + ' is already member of ' + member.teamName);
     }
 });
 
-c.calling('is-member').invoke(function(teamId, personId) {
-    var members = JSONStorage.getItem('members') || [];
+c.calling('is-person-member-of-team').invoke(function(teamId, personId) {
+    var members = loadData();
     var member = members.filter(function(member) {
-        return member.teamId === payload.teamId && member.personId === payload.personId;
+        return member.teamId === teamId && member.personId === personId;
     })[0];
     if (!member) {
         throw new Error(member.personName + ' is not member of ' + member.teamName);
@@ -56,14 +63,14 @@ c.calling('is-member').invoke(function(teamId, personId) {
 });
 
 c.calling('list-members-from-team').invoke(function(teamId) {
-    var members = JSONStorage.getItem('members') || [];
+    var members = loadData();
     return members.filter(function(member) {
         return member.teamId === teamId;
     });
 });
 
 c.calling('list-members-from-person').invoke(function(personId) {
-    var members = JSONStorage.getItem('members') || [];
+    var members = loadData();
     return members.filter(function(member) {
         return member.personId === personId;
     });

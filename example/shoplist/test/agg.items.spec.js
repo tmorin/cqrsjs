@@ -1,21 +1,26 @@
-if (typeof localStorage === "undefined" || localStorage === null) {
-    var JSONStorage = require('node-localstorage').JSONStorage;
-    jsonStorage = new JSONStorage('./localstorage');
-    var LocalStorage = require('node-localstorage').LocalStorage;
-    localStorage = new LocalStorage('./localstorage');
+/*globals localStorage:true, describe:false, beforeEach:false, afterEach:false, it:false */
+/*jshint -W030, browser:false */
+
+var LocalStorage = require('node-localstorage').LocalStorage;
+var storage = new LocalStorage('./localstorage');
+localStorage = storage;
+
+function getData(name) {
+    return JSON.parse(storage.getItem(name));
+}
+function setData(name, data) {
+    storage.setItem(name, JSON.stringify(data));
 }
 
-var cqrs = require('../../../lib/cqrs')
-var aggItemsHandlers = require('../lib/agg.items.handlers');
-var aggItemsRepoLocal = require('../lib/agg.items.repo.local');
+var cqrs = require('../../../lib/cqrs');
+require('../lib/agg.items.handlers');
+require('../lib/agg.items.repo.local');
 
 var chai = require('chai');
-var sinon = require('sinon');
 var sinonChai = require('sinon-chai');
 var charAsPromised = require('chai-as-promised');
 
 chai.should();
-var expect = chai.expect;
 chai.use(sinonChai);
 chai.use(charAsPromised);
 
@@ -32,8 +37,8 @@ describe('aggregate items', function() {
 
     describe('GIVEN no added items', function() {
         beforeEach(function() {
-            jsonStorage.removeItem('items');
-            jsonStorage.removeItem('suggestions');
+            setData('items', {});
+            setData('suggestions', []);
         });
         describe('WHEN an item is added', function() {
             beforeEach(function() {
@@ -43,7 +48,7 @@ describe('aggregate items', function() {
                 });
             });
             it('THEN it should be stored', function() {
-                var items = jsonStorage.getItem('items');
+                var items = getData('items');
                 items.item1.label.should.eq('item1');
                 items.item1.quantity.should.eq(2);
             });
@@ -55,8 +60,8 @@ describe('aggregate items', function() {
                 }).should.be.rejected;
             });
             it('THEN it should not be removed', function() {
-                var items = jsonStorage.getItem('items');
-                expect(items).to.be.null;
+                var items = getData('items');
+                Object.keys(items).should.be.lengthOf(0);
             });
         });
         describe('WHEN an item is marked', function() {
@@ -66,15 +71,15 @@ describe('aggregate items', function() {
                 }).should.be.rejected;
             });
             it('THEN it should not be marked', function() {
-                var items = jsonStorage.getItem('items');
-                expect(items).to.be.null;
+                var items = getData('items');
+                Object.keys(items).should.be.lengthOf(0);
             });
         });
     });
 
     describe('GIVEN an item with the label item1', function() {
         beforeEach(function() {
-            jsonStorage.setItem('items', {
+            setData('items', {
                 item1: {
                     label: 'item1',
                     quantity: 1
@@ -82,7 +87,7 @@ describe('aggregate items', function() {
             });
         });
         describe('WHEN the application start', function() {
-            var p, loadedItems;
+            var loadedItems;
             beforeEach(function(done) {
                 domain.on('itemsLoaded').invoke(function (items) {
                     loadedItems = items;
@@ -103,7 +108,7 @@ describe('aggregate items', function() {
                 }).should.be.rejected;
             });
             it('THEN it should not be stored', function() {
-                var items = jsonStorage.getItem('items');
+                var items = getData('items');
                 items.item1.label.should.eq('item1');
                 items.item1.quantity.should.eq(1);
             });
@@ -115,8 +120,8 @@ describe('aggregate items', function() {
                 });
             });
             it('THEN it should be removed', function() {
-                var items = jsonStorage.getItem('items');
-                expect(items.item1).to.be.undefined;
+                var items = getData('items');
+                Object.keys(items).should.be.lengthOf(0);
             });
         });
         describe('WHEN item1 is marked', function() {
@@ -126,7 +131,7 @@ describe('aggregate items', function() {
                 });
             });
             it('THEN it should be marked', function() {
-                var items = jsonStorage.getItem('items');
+                var items = getData('items');
                 items.item1.label.should.eq('item1');
                 items.item1.marked.should.eq(true);
             });
@@ -137,7 +142,7 @@ describe('aggregate items', function() {
                     });
                 });
                 it('THEN it should be marked', function() {
-                    var items = jsonStorage.getItem('items');
+                    var items = getData('items');
                     items.item1.label.should.eq('item1');
                     items.item1.marked.should.eq(false);
                 });
@@ -151,7 +156,7 @@ describe('aggregate items', function() {
                 });
             });
             it('THEN it should be updated', function() {
-                var items = jsonStorage.getItem('items');
+                var items = getData('items');
                 items.item1.label.should.eq('item1');
                 items.item1.quantity.should.eq(10);
             });
@@ -159,3 +164,4 @@ describe('aggregate items', function() {
     });
 
 });
+/*jshint +W030 */

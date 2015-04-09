@@ -1,24 +1,28 @@
-if (typeof localStorage === "undefined" || localStorage === null) {
-    var JSONStorage = require('node-localstorage').JSONStorage;
-    jsonStorage = new JSONStorage('./localstorage');
-    var LocalStorage = require('node-localstorage').LocalStorage;
-    localStorage = new LocalStorage('./localstorage');
+/*globals localStorage:true, describe:false, beforeEach:false, afterEach:false, it:false */
+
+var LocalStorage = require('node-localstorage').LocalStorage;
+var storage = new LocalStorage('./localstorage');
+localStorage = storage;
+
+function getData(name) {
+    return JSON.parse(storage.getItem(name));
+}
+function setData(name, data) {
+    storage.setItem(name, JSON.stringify(data));
 }
 
-var cqrs = require('../../../lib/cqrs')
-var aggItemsHandlers = require('../lib/agg.items.handlers');
-var aggItemsRepoLocal = require('../lib/agg.items.repo.local');
-var aggSuggestionsHandlers = require('../lib/agg.suggestions.handlers');
-var aggSuggestionsRepoLocal = require('../lib/agg.suggestions.repo.local');
-var compItemToSuggestion = require('../lib/comp.itemToSuggestion');
+var cqrs = require('../../../lib/cqrs');
+require('../lib/agg.items.handlers');
+require('../lib/agg.items.repo.local');
+require('../lib/agg.suggestions.handlers');
+require('../lib/agg.suggestions.repo.local');
+require('../lib/comp.itemToSuggestion');
 
 var chai = require('chai');
-var sinon = require('sinon');
 var sinonChai = require('sinon-chai');
 var charAsPromised = require('chai-as-promised');
 
 chai.should();
-var expect = chai.expect;
 chai.use(sinonChai);
 chai.use(charAsPromised);
 
@@ -35,8 +39,8 @@ describe('comp item to suggestion', function() {
 
     describe('GIVEN no added items and no suggestions', function() {
         beforeEach(function() {
-            jsonStorage.removeItem('items');
-            jsonStorage.setItem('suggestions', ['item2']);
+            setData('items', {});
+            setData('suggestions', ['item2']);
         });
         describe('WHEN an item is added', function() {
             beforeEach(function() {
@@ -46,7 +50,7 @@ describe('comp item to suggestion', function() {
                 });
             });
             it('THEN it should be added has suggestion', function() {
-                var suggestions = jsonStorage.getItem('suggestions');
+                var suggestions = getData('suggestions');
                 suggestions.should.have.lengthOf(2);
             });
         });
@@ -58,7 +62,7 @@ describe('comp item to suggestion', function() {
                 });
             });
             it('THEN it should be added has suggestion', function() {
-                var suggestions = jsonStorage.getItem('suggestions');
+                var suggestions = getData('suggestions');
                 suggestions.should.have.lengthOf(1);
             });
         });

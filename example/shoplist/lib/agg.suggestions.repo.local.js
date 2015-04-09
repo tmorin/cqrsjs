@@ -1,5 +1,5 @@
 (function(root, factory) {
-    /* globals define:false */
+    /* globals define:false, module:false */
     'use strict';
     /* istanbul ignore next */
     if (typeof define === 'function' && define.amd) {

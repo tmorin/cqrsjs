@@ -1,5 +1,5 @@
 (function(root, factory) {
-    /* globals define:false */
+    /* globals define:false, module:false */
     'use strict';
     /* istanbul ignore next */
     if (typeof define === 'function' && define.amd) {
@@ -17,7 +17,7 @@
     });
 
     domain.on('itemAdded').invoke(function(payload) {
-        return domain.send('addSuggestion', payload.label).then(null, function(error) {
+        return domain.send('addSuggestion', payload.label).then(null, function() {
             return Promise.resolve(payload);
         });
     });
