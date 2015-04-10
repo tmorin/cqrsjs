@@ -16,9 +16,19 @@ var aggregateInstance = cqrs().aggregate('aggregateName');
 aggregateInstance.when('commandName')
     .invoke(function (payload, command) {
         // handle the command
-        // return something if you want to apply the linked event
+        // return a payload event if you want to apply the linked event
     })
     .apply('eventName', 'anotherEventName');
+```
+
+```
+aggregateInstance.when('commandName')
+    .invoke(function (payload, command) {
+        // handle the command
+        // return an array of payload event
+    })
+    .forEach() // for each payload event
+    .apply('eventName', 'anotherEventName'); // apply the following events
 ```
 
 ## Handle events
@@ -27,7 +37,7 @@ aggregateInstance.when('commandName')
 aggregateInstance.when('eventName')
     .invoke(function (payload, command) {
         // handle the command
-        // return something if you want to apply the linked event
+        // return a payload event if you want to apply the linked event
     })
     .apply('eventName', 'anotherEventName');
 ```
