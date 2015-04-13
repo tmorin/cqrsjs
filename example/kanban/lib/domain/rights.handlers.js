@@ -1,9 +1,12 @@
 var cqrs = require('../../../../lib/cqrs');
+var chai = require('chai');
 var c = cqrs();
 
 var rightsAgg = c.aggregate('rights');
 
 rightsAgg.when('update-roles').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.personId, 'personId is required');
+    chai.assert.ok(payload.roles, 'roles is required');
     return cqrs().call('check-right', 'manage-persons', metadata.userId).then(function() {
         return {
             personId: payload.personId,

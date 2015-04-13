@@ -1,7 +1,5 @@
 var restify = require('restify');
 
-require('../../../lib/cqrs').debug = true;
-
 var server = restify.createServer();
 
 server.use(restify.CORS());

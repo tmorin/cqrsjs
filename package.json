@@ -23,6 +23,7 @@
     "auto-plug": "^1.0.1",
     "chai": "^2.1.2",
     "chai-as-promised": "^4.3.0",
+    "chai-http": "^1.0.0",
     "del": "^1.1.1",
     "es6-shim": "^0.27.1",
     "grunt": "^0.4.5",
@@ -43,6 +44,7 @@
     "run-sequence": "^1.0.2",
     "sinon": "^1.14.1",
     "sinon-chai": "^2.7.0",
+    "supertest": "^0.15.0",
     "uuid": "^2.0.1"
   },
   "engines": {

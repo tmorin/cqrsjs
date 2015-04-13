@@ -60,6 +60,24 @@ gulp.task('test-kanban', function () {
         });
 });
 
+gulp.task('test-kanban-domain', function () {
+    return gulp.src(['example/kanban/lib/**/*.js'])
+        .pipe(gp.istanbul())
+        .pipe(gp.istanbul.hookRequire())
+        .on('finish', function () {
+            gulp.src(['example/kanban/test/domain/**/*.js']).pipe(gp.mocha()).pipe(gp.istanbul.writeReports());
+        });
+});
+
+gulp.task('test-kanban-api', function () {
+    return gulp.src(['example/kanban/lib/api/**/*.js'])
+        .pipe(gp.istanbul())
+        .pipe(gp.istanbul.hookRequire())
+        .on('finish', function () {
+            gulp.src(['example/kanban/lib/**/*.js', 'example/kanban/test/api/**/*.js']).pipe(gp.mocha()).pipe(gp.istanbul.writeReports());
+        });
+});
+
 gulp.task('serve-kanban', function (done) {
     var server = require('./example/kanban/lib/server');
     var storage = require('./example/kanban/lib/storage').local;

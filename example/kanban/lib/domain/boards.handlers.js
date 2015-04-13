@@ -1,4 +1,5 @@
 var uuid = require('uuid');
+var chai = require('chai');
 var cqrs = require('../../../../lib/cqrs');
 var c = cqrs();
 
@@ -7,6 +8,8 @@ var boardsAgg = c.aggregate('boards');
 /* ADD */
 
 boardsAgg.when('add-board').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.roomId, 'roomId is required');
+    chai.assert.ok(payload.name, 'name is required');
     return cqrs().call('check-right', 'manage-boards', metadata.userId, payload.roomId).then(function() {
         return {
             roomId: payload.roomId,
@@ -19,6 +22,9 @@ boardsAgg.when('add-board').invoke(function(payload, metadata) {
 /* UPDATE DETAILS */
 
 boardsAgg.when('update-board-details').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.roomId, 'roomId is required');
+    chai.assert.ok(payload.boardId, 'boardId is required');
+    chai.assert.ok(payload.name, 'name is required');
     return cqrs().call('check-right', 'manage-board', metadata.userId, payload.roomId, payload.boardId).then(function() {
         return {
             roomId: payload.roomId,
@@ -32,6 +38,8 @@ boardsAgg.when('update-board-details').invoke(function(payload, metadata) {
 /* REMOVE */
 
 boardsAgg.when('remove-board').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.roomId, 'roomId is required');
+    chai.assert.ok(payload.boardId, 'boardId is required');
     return cqrs().call('check-right', 'manage-board', metadata.userId, payload.roomId, payload.boardId).then(function() {
         return cqrs().call('get-board', payload.roomId, payload.boardId);
     }).then(function(board) {

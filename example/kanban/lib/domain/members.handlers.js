@@ -1,4 +1,5 @@
 var cqrs = require('../../../../lib/cqrs');
+var chai = require('chai');
 var c = cqrs();
 
 var membersAgg = c.aggregate('members');
@@ -6,6 +7,8 @@ var membersAgg = c.aggregate('members');
 /* ADD */
 
 membersAgg.when('add-member').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.teamId, 'teamId is required');
+    chai.assert.ok(payload.personId, 'personId is required');
     return Promise.all([
         c.call('check-right', 'manage-team', metadata.userId, metadata.roomId),
         c.call('is-person-not-member-of-team', payload.teamId, payload.personId)
@@ -27,6 +30,8 @@ membersAgg.when('add-member').invoke(function(payload, metadata) {
 /* REMOVE */
 
 membersAgg.when('remove-member').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.teamId, 'teamId is required');
+    chai.assert.ok(payload.personId, 'personId is required');
     return Promise.all([
         c.call('check-right', 'manage-team', metadata.userId, metadata.roomId),
         c.call('is-person-member-of-team', payload.teamId, payload.personId)

@@ -2,8 +2,8 @@ var server = require('../server');
 var cqrs = require('../../../../lib/cqrs');
 var c = cqrs();
 
-server.post('/persons', function(req, res, next) {
-    c.send('add-person', req.params, {
+server.post('/teams', function(req, res, next) {
+    c.send('add-team', req.params, {
         userId: 'admin'
     }).then(function(payload) {
         res.json(payload);
@@ -13,8 +13,8 @@ server.post('/persons', function(req, res, next) {
     return next();
 });
 
-server.get('/persons/:personId', function(req, res, next) {
-    c.call('get-person', req.params.personId).then(function(payload) {
+server.get('/teams/:teamId', function(req, res, next) {
+    c.call('get-team', req.params.teamId).then(function(payload) {
         res.json(payload);
     }, function(error) {
         res.json(500, error);
@@ -22,13 +22,13 @@ server.get('/persons/:personId', function(req, res, next) {
     return next();
 });
 
-server.get('/persons/:personId/teams', function(req, res, next) {
-    c.call('get-person', req.params.personId).then(function () {
-        return c.call('list-members-from-person', req.params.personId).then(function (members) {
+server.get('/teams/:teamId/persons', function(req, res, next) {
+    c.call('get-team', req.params.teamId).then(function () {
+        return c.call('list-members-from-team', req.params.teamId).then(function (members) {
             return members.map(function (member) {
                 return {
-                    teamId: member.teamId,
-                    name: member.teamName
+                    personId: member.personId,
+                    name: member.personName
                 };
             });
         });
@@ -40,8 +40,8 @@ server.get('/persons/:personId/teams', function(req, res, next) {
     return next();
 });
 
-server.put('/persons/:personId/details', function(req, res, next) {
-    c.send('update-person-details', req.params, {
+server.put('/teams/:teamId/details', function(req, res, next) {
+    c.send('update-team-details', req.params, {
         userId: 'admin'
     }).then(function(payload) {
         res.json(payload);
@@ -51,8 +51,8 @@ server.put('/persons/:personId/details', function(req, res, next) {
     return next();
 });
 
-server.del('/persons/:personId', function(req, res, next) {
-    c.send('remove-person', req.params, {
+server.del('/teams/:teamId', function(req, res, next) {
+    c.send('remove-team', req.params, {
         userId: 'admin'
     }).then(function(payload) {
         res.json(payload);

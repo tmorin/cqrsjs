@@ -1,4 +1,5 @@
 var uuid = require('uuid');
+var chai = require('chai');
 var cqrs = require('../../../../lib/cqrs');
 var c = cqrs();
 
@@ -7,6 +8,10 @@ var cardsAgg = c.aggregate('cards');
 /* ADD */
 
 cardsAgg.when('add-card').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.roomId, 'roomId is required');
+    chai.assert.ok(payload.boardId, 'boardId is required');
+    chai.assert.ok(payload.columnId, 'columnId is required');
+    chai.assert.ok(payload.name, 'name is required');
     return cqrs().call('check-right', 'manage-cards', metadata.userId, payload.roomId, payload.boardId, payload.columnId).then(function() {
         return {
             roomId: payload.roomId,
@@ -21,6 +26,11 @@ cardsAgg.when('add-card').invoke(function(payload, metadata) {
 /* UPDATE DETAILS */
 
 cardsAgg.when('update-card-details').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.roomId, 'roomId is required');
+    chai.assert.ok(payload.boardId, 'boardId is required');
+    chai.assert.ok(payload.columnId, 'columnId is required');
+    chai.assert.ok(payload.cardId, 'cardId is required');
+    chai.assert.ok(payload.name, 'name is required');
     return cqrs().call('check-right', 'manage-card', metadata.userId, payload.roomId, payload.boardId, payload.columnId, payload.cardId).then(function() {
         return {
             roomId: payload.roomId,
@@ -36,6 +46,11 @@ cardsAgg.when('update-card-details').invoke(function(payload, metadata) {
 /* MOVE */
 
 cardsAgg.when('move-card').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.roomId, 'roomId is required');
+    chai.assert.ok(payload.boardId, 'boardId is required');
+    chai.assert.ok(payload.columnId, 'columnId is required');
+    chai.assert.ok(payload.cardId, 'cardId is required');
+    chai.assert.ok(payload.nextColumnId, 'nextColumnId is required');
     return cqrs().call('check-right', 'manage-card', metadata.userId, payload.roomId, payload.boardId, payload.columnId, payload.cardId).then(function() {
         return cqrs().call('get-card', payload.roomId, payload.boardId, payload.columnId, payload.cardId);
     }).then(function(card) {
@@ -53,6 +68,11 @@ cardsAgg.when('move-card').invoke(function(payload, metadata) {
 /* ASSIGN CARD */
 
 cardsAgg.when('assign-card').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.roomId, 'roomId is required');
+    chai.assert.ok(payload.boardId, 'boardId is required');
+    chai.assert.ok(payload.columnId, 'columnId is required');
+    chai.assert.ok(payload.cardId, 'cardId is required');
+    chai.assert.ok(payload.personId, 'personId is required');
     return cqrs().call('check-right', 'manage-card', metadata.userId, payload.roomId, payload.boardId, payload.columnId, payload.cardId).then(function() {
         return Promise.all([
             cqrs().call('get-card', payload.roomId, payload.boardId, payload.columnId, payload.cardId),
@@ -74,6 +94,10 @@ cardsAgg.when('assign-card').invoke(function(payload, metadata) {
 /* UNASSIGN CARD */
 
 cardsAgg.when('unassign-card').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.roomId, 'roomId is required');
+    chai.assert.ok(payload.boardId, 'boardId is required');
+    chai.assert.ok(payload.columnId, 'columnId is required');
+    chai.assert.ok(payload.cardId, 'cardId is required');
     return cqrs().call('check-right', 'manage-card', metadata.userId, payload.roomId, payload.boardId, payload.columnId, payload.cardId).then(function() {
         return cqrs().call('get-card', payload.roomId, payload.boardId, payload.columnId, payload.cardId);
     }).then(function(card) {
@@ -92,6 +116,10 @@ cardsAgg.when('unassign-card').invoke(function(payload, metadata) {
 /* REMOVE */
 
 cardsAgg.when('remove-card').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.roomId, 'roomId is required');
+    chai.assert.ok(payload.boardId, 'boardId is required');
+    chai.assert.ok(payload.columnId, 'columnId is required');
+    chai.assert.ok(payload.cardId, 'cardId is required');
     return cqrs().call('check-right', 'manage-card', metadata.userId, payload.roomId, payload.boardId, payload.columnId, payload.cardId).then(function() {
         return cqrs().call('get-card', payload.roomId, payload.boardId, payload.columnId, payload.cardId);
     }).then(function(card) {

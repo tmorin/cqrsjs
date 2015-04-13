@@ -1,4 +1,5 @@
 var uuid = require('uuid');
+var chai = require('chai');
 var cqrs = require('../../../../lib/cqrs');
 var c = cqrs();
 
@@ -7,6 +8,7 @@ var roomsAgg = c.aggregate('rooms');
 /* ADD */
 
 roomsAgg.when('add-room').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.name, 'name is required');
     return c.call('check-right', 'manage-rooms', metadata.userId).then(function() {
         return {
             roomId: uuid.v4(),
@@ -18,6 +20,8 @@ roomsAgg.when('add-room').invoke(function(payload, metadata) {
 /* UPDATE DETAILS */
 
 roomsAgg.when('update-room-details').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.roomId, 'roomId is required');
+    chai.assert.ok(payload.name, 'name is required');
     return c.call('check-right', 'manage-room', metadata.userId, payload.roomId).then(function() {
         return {
             roomId: payload.roomId,
@@ -30,6 +34,8 @@ roomsAgg.when('update-room-details').invoke(function(payload, metadata) {
 /* LINK ROOM TO TEAM */
 
 roomsAgg.when('link-room-to-team').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.roomId, 'roomId is required');
+    chai.assert.ok(payload.teamId, 'teamId is required');
     return Promise.all([
         c.call('check-right', 'manage-room', metadata.userId, payload.roomId),
         c.call('is-room-not-linked-to-team', payload.roomId, payload.teamId)
@@ -51,6 +57,8 @@ roomsAgg.when('link-room-to-team').invoke(function(payload, metadata) {
 /* UNLINK ROOM TO TEAM */
 
 roomsAgg.when('unlink-room-to-team').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.roomId, 'roomId is required');
+    chai.assert.ok(payload.teamId, 'teamId is required');
     return Promise.all([
         c.call('check-right', 'manage-room', metadata.userId, payload.roomId),
         c.call('is-room-linked-to-team', payload.roomId, payload.teamId)
@@ -72,6 +80,7 @@ roomsAgg.when('unlink-room-to-team').invoke(function(payload, metadata) {
 /* REMOVE */
 
 roomsAgg.when('remove-room').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.roomId, 'roomId is required');
     return c.call('check-right', 'manage-room', metadata.userId, payload.roomId).then(function() {
         return c.call('get-room', payload.roomId);
     }).then(function(room) {

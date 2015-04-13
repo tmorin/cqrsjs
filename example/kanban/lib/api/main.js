@@ -1,0 +1,2 @@
+require('./persons');
+require('./teams');

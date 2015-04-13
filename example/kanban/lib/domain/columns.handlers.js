@@ -1,4 +1,5 @@
 var uuid = require('uuid');
+var chai = require('chai');
 var cqrs = require('../../../../lib/cqrs');
 var c = cqrs();
 
@@ -7,6 +8,9 @@ var columnsAgg = c.aggregate('columns');
 /* ADD */
 
 columnsAgg.when('add-column').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.roomId, 'roomId is required');
+    chai.assert.ok(payload.boardId, 'boardId is required');
+    chai.assert.ok(payload.name, 'name is required');
     return cqrs().call('check-right', 'manage-columns', metadata.userId, payload.roomId, payload.boardId).then(function() {
         return cqrs().call('list-columns-from-board', payload.roomId, payload.boardId);
     }).then(function(columns) {
@@ -23,6 +27,10 @@ columnsAgg.when('add-column').invoke(function(payload, metadata) {
 /* UPDATE DETAILS */
 
 columnsAgg.when('update-column-details').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.roomId, 'roomId is required');
+    chai.assert.ok(payload.boardId, 'boardId is required');
+    chai.assert.ok(payload.columnId, 'columnId is required');
+    chai.assert.ok(payload.name, 'name is required');
     return cqrs().call('check-right', 'manage-column', metadata.userId, payload.roomId, payload.boardId, payload.columnId).then(function() {
         return {
             roomId: payload.roomId,
@@ -37,6 +45,9 @@ columnsAgg.when('update-column-details').invoke(function(payload, metadata) {
 /* REMOVE */
 
 columnsAgg.when('remove-column').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.roomId, 'roomId is required');
+    chai.assert.ok(payload.boardId, 'boardId is required');
+    chai.assert.ok(payload.columnId, 'columnId is required');
     return cqrs().call('check-right', 'manage-column', metadata.userId, payload.roomId, payload.boardId, payload.columnId).then(function() {
         return cqrs().call('get-column', payload.roomId, payload.boardId, payload.columnId);
     }).then(function(column) {
@@ -52,7 +63,10 @@ columnsAgg.when('remove-column').invoke(function(payload, metadata) {
 /* UPDATE COLUMNS ORDER */
 
 columnsAgg.when('update-columns-order').invoke(function(payload, metadata) {
-    return cqrs().call('check-right', 'manage-column', metadata.userId, payload.roomId, payload.boardId, payload.columnId).then(function() {
+    chai.assert.ok(payload.roomId, 'roomId is required');
+    chai.assert.ok(payload.boardId, 'boardId is required');
+    chai.assert.ok(payload.columns, 'columns is required');
+    return cqrs().call('check-right', 'manage-columns', metadata.userId, payload.roomId, payload.boardId).then(function() {
         return cqrs().call('list-columns-from-board', payload.roomId, payload.boardId);
     }).then(function(columns) {
         return columns.map(function (column) {
