@@ -1,10 +1,11 @@
-var server = require('../server');
+var passport = require('passport');
+var http = require('../server').http;
 var cqrs = require('../../../../lib/cqrs');
 var c = cqrs();
 
-server.post('/rooms/:roomId/boards', function(req, res, next) {
+http.post('/rooms/:roomId/boards', passport.authenticate('basic'), function(req, res, next) {
     c.send('add-board', req.params, {
-        userId: 'admin'
+        userId: req.user.personId
     }).then(function(payload) {
         res.json(payload);
     }, function(error) {
@@ -13,7 +14,7 @@ server.post('/rooms/:roomId/boards', function(req, res, next) {
     return next();
 });
 
-server.get('/rooms/:roomId/boards', function(req, res, next) {
+http.get('/rooms/:roomId/boards', passport.authenticate('basic'), function(req, res, next) {
     c.call('get-room', req.params.roomId).then(function () {
         return c.call('list-boards-from-room', req.params.roomId);
     }).then(function(payload) {
@@ -24,7 +25,7 @@ server.get('/rooms/:roomId/boards', function(req, res, next) {
     return next();
 });
 
-server.get('/rooms/:roomId/boards/:boardId', function(req, res, next) {
+http.get('/rooms/:roomId/boards/:boardId', passport.authenticate('basic'), function(req, res, next) {
     c.call('get-board', req.params.roomId, req.params.boardId).then(function(payload) {
         res.json(payload);
     }, function(error) {
@@ -33,9 +34,9 @@ server.get('/rooms/:roomId/boards/:boardId', function(req, res, next) {
     return next();
 });
 
-server.put('/rooms/:roomId/boards/:boardId/details', function(req, res, next) {
+http.put('/rooms/:roomId/boards/:boardId/details', passport.authenticate('basic'), function(req, res, next) {
     c.send('update-board-details', req.params, {
-        userId: 'admin'
+        userId: req.user.personId
     }).then(function(payload) {
         res.json(payload);
     }, function(error) {
@@ -44,9 +45,9 @@ server.put('/rooms/:roomId/boards/:boardId/details', function(req, res, next) {
     return next();
 });
 
-server.del('/rooms/:roomId/boards/:boardId', function(req, res, next) {
+http.del('/rooms/:roomId/boards/:boardId', passport.authenticate('basic'), function(req, res, next) {
     c.send('remove-board', req.params, {
-        userId: 'admin'
+        userId: req.user.personId
     }).then(function(payload) {
         res.json(payload);
     }, function(error) {

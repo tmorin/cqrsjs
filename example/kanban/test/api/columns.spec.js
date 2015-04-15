@@ -1,9 +1,9 @@
 /*globals describe:false, beforeEach:false, afterEach:false, it:false */
 /*jshint -W030, browser:false */
 
-var helper = require('./helper');
+var helper = require('../helper');
 var cqrs = require('../../../../lib/cqrs');
-var server = require('../../lib/server');
+var http = require('../../lib/server').http;
 require('../../lib/api/main');
 require('../../lib/domain/main');
 
@@ -25,12 +25,12 @@ describe('/columns', function() {
     });
 
     afterEach(function() {
-        server.close();
+        http.close();
     });
 
     describe('POST /rooms/:roomId/boards/:board/columns', function() {
         it('should add', function() {
-            return chai.request(server).post('/rooms/room0/boards/board0/columns').send({
+            return chai.request(http).post('/rooms/room0/boards/board0/columns').auth('admin', 'admin').send({
                 name: 'new board'
             }).then(function(res) {
                 res.should.have.status(200);
@@ -40,7 +40,7 @@ describe('/columns', function() {
             });
         });
         it('should not add', function() {
-            return chai.request(server).post('/rooms/room0/boards/none/columns').send({
+            return chai.request(http).post('/rooms/room0/boards/none/columns').auth('admin', 'admin').send({
                 name: ''
             }).then(function(res) {
                 res.should.have.status(500);
@@ -50,7 +50,7 @@ describe('/columns', function() {
 
     describe('GET /rooms/:roomId/boards/:board/columns', function() {
         it('should get', function() {
-            return chai.request(server).get('/rooms/room0/boards/board0/columns').then(function(res) {
+            return chai.request(http).get('/rooms/room0/boards/board0/columns').auth('admin', 'admin').then(function(res) {
                 res.should.have.status(200);
                 res.body.should.have.length(2);
                 res.body[0].should.have.property('columnId', 'column0');
@@ -60,7 +60,7 @@ describe('/columns', function() {
             });
         });
         it('should not get', function() {
-            return chai.request(server).get('/rooms/none/boards/none/columns').then(function(res) {
+            return chai.request(http).get('/rooms/none/boards/none/columns').auth('admin', 'admin').then(function(res) {
                 res.should.have.status(500);
             });
         });
@@ -68,7 +68,7 @@ describe('/columns', function() {
 
     describe('GET /rooms/:roomId/boards/:boardId/columns/:columnId', function() {
         it('should get', function() {
-            return chai.request(server).get('/rooms/room0/boards/board0/columns/column0').then(function(res) {
+            return chai.request(http).get('/rooms/room0/boards/board0/columns/column0').auth('admin', 'admin').then(function(res) {
                 res.should.have.status(200);
                 res.body.should.have.property('boardId', 'board0');
                 res.body.should.have.property('columnId', 'column0');
@@ -76,7 +76,7 @@ describe('/columns', function() {
             });
         });
         it('should not get', function() {
-            return chai.request(server).get('/rooms/room0/boards/board0/columns/none').then(function(res) {
+            return chai.request(http).get('/rooms/room0/boards/board0/columns/none').auth('admin', 'admin').then(function(res) {
                 res.should.have.status(500);
             });
         });
@@ -84,7 +84,7 @@ describe('/columns', function() {
 
     describe('PUT /rooms/:roomId/boards/:boardId/columns/:columnId/details', function() {
         it('should update', function() {
-            return chai.request(server).put('/rooms/room0/boards/board0/columns/column0/details').send({
+            return chai.request(http).put('/rooms/room0/boards/board0/columns/column0/details').auth('admin', 'admin').send({
                 name: 'columnBis'
             }).then(function(res) {
                 res.should.have.status(200);
@@ -94,7 +94,7 @@ describe('/columns', function() {
             });
         });
         it('should not update', function() {
-            return chai.request(server).put('/rooms/room0/boards/none/columns/none/details').send({
+            return chai.request(http).put('/rooms/room0/boards/none/columns/none/details').auth('admin', 'admin').send({
                 name: 'boardBis'
             }).then(function(res) {
                 res.should.have.status(500);
@@ -104,7 +104,7 @@ describe('/columns', function() {
 
     describe('PUT /rooms/:roomId/boards/:boardId/columns/order', function() {
         it('should order', function() {
-            return chai.request(server).put('/rooms/room0/boards/board0/columns/order').send({
+            return chai.request(http).put('/rooms/room0/boards/board0/columns/order').auth('admin', 'admin').send({
                 columns: ['column1', 'column0']
             }).then(function(res) {
                 res.should.have.status(200);
@@ -114,7 +114,7 @@ describe('/columns', function() {
             });
         });
         it('should not order', function() {
-            return chai.request(server).put('/rooms/room0/boards/none/columns/order').send({
+            return chai.request(http).put('/rooms/room0/boards/none/columns/order').auth('admin', 'admin').send({
                 order: ['column1', 'column0']
             }).then(function(res) {
                 res.should.have.status(500);
@@ -124,7 +124,7 @@ describe('/columns', function() {
 
     describe('DELETE /rooms/:roomId/boards/:boardId/columns/:columnId', function() {
         it('should remove', function() {
-            return chai.request(server).del('/rooms/room0/boards/board0/columns/column0').then(function(res) {
+            return chai.request(http).del('/rooms/room0/boards/board0/columns/column0').auth('admin', 'admin').then(function(res) {
                 res.should.have.status(200);
                 res.body.should.have.property('boardId', 'board0');
                 res.body.should.have.property('columnId', 'column0');
@@ -132,7 +132,7 @@ describe('/columns', function() {
             });
         });
         it('should not remove', function() {
-            return chai.request(server).del('/rooms/room0/boards/board0/columns/none').then(function(res) {
+            return chai.request(http).del('/rooms/room0/boards/board0/columns/none').auth('admin', 'admin').then(function(res) {
                 res.should.have.status(500);
             });
         });

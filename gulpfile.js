@@ -78,8 +78,17 @@ gulp.task('test-kanban-api', function () {
         });
 });
 
+gulp.task('test-kanban-io', function () {
+    return gulp.src(['example/kanban/lib/io/**/*.js'])
+        .pipe(gp.istanbul())
+        .pipe(gp.istanbul.hookRequire())
+        .on('finish', function () {
+            gulp.src(['example/kanban/lib/**/*.js', 'example/kanban/test/io/**/*.js']).pipe(gp.mocha()).pipe(gp.istanbul.writeReports());
+        });
+});
+
 gulp.task('serve-kanban', function (done) {
-    var server = require('./example/kanban/lib/server');
+    var http = require('./example/kanban/lib/server').http;
     var storage = require('./example/kanban/lib/storage').local;
     storage.clear();
     storage.setItem('rights', JSON.stringify({
@@ -110,8 +119,8 @@ gulp.task('serve-kanban', function (done) {
     require('./example/kanban/lib/domain/teams.handlers');
     require('./example/kanban/lib/domain/teams.repo.local');
     require('./example/kanban/lib/api/persons');
-    server.listen(8080, function() {
-        console.log('%s listening at %s', server.name, server.url);
+    http.listen(8080, function() {
+        console.log('%s listening at %s', http.name, http.url);
         done();
     });
 });

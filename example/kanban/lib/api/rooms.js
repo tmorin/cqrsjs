@@ -1,10 +1,11 @@
-var server = require('../server');
+var passport = require('passport');
+var http = require('../server').http;
 var cqrs = require('../../../../lib/cqrs');
 var c = cqrs();
 
-server.post('/rooms', function(req, res, next) {
+http.post('/rooms', passport.authenticate('basic'), function(req, res, next) {
     c.send('add-room', req.params, {
-        userId: 'admin'
+        userId: req.user.personId
     }).then(function(payload) {
         res.json(payload);
     }, function(error) {
@@ -13,7 +14,7 @@ server.post('/rooms', function(req, res, next) {
     return next();
 });
 
-server.get('/rooms/:roomId', function(req, res, next) {
+http.get('/rooms/:roomId', passport.authenticate('basic'), function(req, res, next) {
     c.call('get-room', req.params.roomId).then(function(payload) {
         res.json(payload);
     }, function(error) {
@@ -22,9 +23,9 @@ server.get('/rooms/:roomId', function(req, res, next) {
     return next();
 });
 
-server.post('/rooms/:roomId/links/:teamId', function(req, res, next) {
+http.post('/rooms/:roomId/links/:teamId', passport.authenticate('basic'), function(req, res, next) {
     c.send('link-room-to-team', req.params, {
-        userId: 'admin'
+        userId: req.user.personId
     }).then(function (link) {
         return {
             teamId: link.teamId,
@@ -38,9 +39,9 @@ server.post('/rooms/:roomId/links/:teamId', function(req, res, next) {
     return next();
 });
 
-server.del('/rooms/:roomId/links/:teamId', function(req, res, next) {
+http.del('/rooms/:roomId/links/:teamId', passport.authenticate('basic'), function(req, res, next) {
     c.send('unlink-room-to-team', req.params, {
-        userId: 'admin'
+        userId: req.user.personId
     }).then(function (link) {
         return {
             teamId: link.teamId,
@@ -54,9 +55,9 @@ server.del('/rooms/:roomId/links/:teamId', function(req, res, next) {
     return next();
 });
 
-server.put('/rooms/:roomId/details', function(req, res, next) {
+http.put('/rooms/:roomId/details', passport.authenticate('basic'), function(req, res, next) {
     c.send('update-room-details', req.params, {
-        userId: 'admin'
+        userId: req.user.personId
     }).then(function(payload) {
         res.json(payload);
     }, function(error) {
@@ -65,9 +66,9 @@ server.put('/rooms/:roomId/details', function(req, res, next) {
     return next();
 });
 
-server.del('/rooms/:roomId', function(req, res, next) {
+http.del('/rooms/:roomId', passport.authenticate('basic'), function(req, res, next) {
     c.send('remove-room', req.params, {
-        userId: 'admin'
+        userId: req.user.personId
     }).then(function(payload) {
         res.json(payload);
     }, function(error) {

@@ -13,12 +13,15 @@ cardsAgg.when('add-card').invoke(function(payload, metadata) {
     chai.assert.ok(payload.columnId, 'columnId is required');
     chai.assert.ok(payload.name, 'name is required');
     return cqrs().call('check-right', 'manage-cards', metadata.userId, payload.roomId, payload.boardId, payload.columnId).then(function() {
+        return cqrs().call('list-cards-from-column', payload.roomId, payload.boardId, payload.columnId);
+    }).then(function(cards) {
         return {
             roomId: payload.roomId,
             boardId: payload.boardId,
             columnId: payload.columnId,
             cardId: uuid.v4(),
-            name: payload.name
+            name: payload.name,
+            order: cards.indexOf(cards.length - 1).order || 0
         };
     });
 }).apply('card-added');
@@ -52,15 +55,21 @@ cardsAgg.when('move-card').invoke(function(payload, metadata) {
     chai.assert.ok(payload.cardId, 'cardId is required');
     chai.assert.ok(payload.nextColumnId, 'nextColumnId is required');
     return cqrs().call('check-right', 'manage-card', metadata.userId, payload.roomId, payload.boardId, payload.columnId, payload.cardId).then(function() {
-        return cqrs().call('get-card', payload.roomId, payload.boardId, payload.columnId, payload.cardId);
-    }).then(function(card) {
+        return Promise.all([
+            cqrs().call('get-card', payload.roomId, payload.boardId, payload.columnId, payload.cardId),
+            cqrs().call('list-cards-from-column', payload.roomId, payload.boardId, payload.nextColumnId)
+        ]);
+    }).then(function(result) {
+        var card = result[0];
+        var cards = result[1];
         return {
             roomId: card.roomId,
             boardId: card.boardId,
             columnId: payload.nextColumnId,
             previousColumnId: card.columnId,
             cardId: card.cardId,
-            name: card.name
+            name: card.name,
+            order: cards.length
         };
     });
 }).apply('card-moved');
@@ -132,6 +141,39 @@ cardsAgg.when('remove-card').invoke(function(payload, metadata) {
         };
     });
 }).apply('card-removed');
+
+/* UPDATE CARDS ORDER */
+
+cardsAgg.when('update-cards-order').invoke(function(payload, metadata) {
+    chai.assert.ok(payload.roomId, 'roomId is required');
+    chai.assert.ok(payload.boardId, 'boardId is required');
+    chai.assert.ok(payload.columnId, 'columnId is required');
+    chai.assert.ok(payload.cards, 'cards is required');
+    return cqrs().call('check-right', 'manage-cards', metadata.userId, payload.roomId, payload.boardId, payload.columnId).then(function() {
+        return cqrs().call('list-cards-from-column', payload.roomId, payload.boardId, payload.columnId);
+    }).then(function(cards) {
+        return cards.map(function (card) {
+            return {
+                roomId: payload.roomId,
+                boardId: payload.boardId,
+                columnId: payload.columnId,
+                cardId: card.cardId,
+                name: card.name,
+                order: payload.cards.indexOf(card.cardId)
+            };
+        }).sort(function (a, b) {
+            return a.order - b.order;
+        }).reduce(function (a, b) {
+            a.cards.push(b);
+            return a;
+        }, {
+            roomId: payload.roomId,
+            boardId: payload.boardId,
+            columnId: payload.columnId,
+            cards: []
+        });
+    });
+}).apply('cards-order-updated');
 
 /* REMOVE WHEN COLUMN REMOVED */
 

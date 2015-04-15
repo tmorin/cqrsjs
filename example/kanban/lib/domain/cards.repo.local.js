@@ -28,6 +28,7 @@ cardsAgg.on('card-details-updated').invoke(function(payload) {
 cardsAgg.on('card-moved').invoke(function(payload) {
     var cards = loadData();
     cards[payload.cardId].columnId = payload.columnId;
+    cards[payload.cardId].order = payload.order;
     persistData(cards);
 });
 
@@ -40,6 +41,14 @@ cardsAgg.on('card-assigned').invoke(function(payload) {
 cardsAgg.on('card-removed').invoke(function(payload) {
     var cards = loadData();
     delete cards[payload.cardId];
+    persistData(cards);
+});
+
+cardsAgg.on('cards-order-updated').invoke(function(payload) {
+    var cards = loadData();
+    payload.cards.forEach(function (card) {
+        cards[card.cardId].order = card.order;
+    });
     persistData(cards);
 });
 

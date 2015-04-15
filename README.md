@@ -11,7 +11,7 @@ CQRS pattern application for JavaScript.
 
 cqrsjs is designed to work into browsers and node too.
 
-cqrsjs used the es6 Promise.
+cqrsjs used the ES6 Promise.
 So use a polyfill if the targeted runtime doesn't provide a native implementation.
 
 cqrsjs is built around the es5 features.
@@ -39,10 +39,10 @@ bower install --save cqrs.js
 require(['cqrsjs', ...
 ```
 
-## Example
+## Examples
 
+- [kanban](example/kanban) built on top of restify and socket.io
 - [shoplist](example/shoplist)
-- [kanban](example/kanban)
 
 ## Documentation
 
@@ -51,3 +51,23 @@ require(['cqrsjs', ...
 - [play with events](doc/play-with-events.md)
 - [play with queries](doc/play-with-queries.md)
 - [play with aggregates](doc/play-with-aggregates.md)
+
+# gulp tasks
+
+```shell
+gulp jshint
+```
+
+```shell
+gulp build
+```
+
+```shell
+gulp ci
+```
+
+# grunt tasks
+
+```shell
+grunt release
+```

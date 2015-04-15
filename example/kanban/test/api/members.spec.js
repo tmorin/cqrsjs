@@ -1,9 +1,9 @@
 /*globals describe:false, beforeEach:false, afterEach:false, it:false */
 /*jshint -W030, browser:false */
 
-var helper = require('./helper');
+var helper = require('../helper');
 var cqrs = require('../../../../lib/cqrs');
-var server = require('../../lib/server');
+var http = require('../../lib/server').http;
 require('../../lib/api/main');
 require('../../lib/domain/main');
 
@@ -25,12 +25,12 @@ describe('/members', function() {
     });
 
     afterEach(function() {
-        server.close();
+        http.close();
     });
 
     describe('POST /members', function() {
         it('should add', function() {
-            return chai.request(server).post('/members').send({
+            return chai.request(http).post('/members').auth('admin', 'admin').send({
                 teamId: 'team1',
                 personId: 'person1'
             }).then(function(res) {
@@ -42,7 +42,7 @@ describe('/members', function() {
             });
         });
         it('should not add when no team', function() {
-            return chai.request(server).post('/members').send({
+            return chai.request(http).post('/members').auth('admin', 'admin').send({
                 teamId: 'none',
                 personId: 'person1'
             }).then(function(res) {
@@ -50,7 +50,7 @@ describe('/members', function() {
             });
         });
         it('should not add when no person', function() {
-            return chai.request(server).post('/members').send({
+            return chai.request(http).post('/members').auth('admin', 'admin').send({
                 teamId: 'team1',
                 personId: 'none'
             }).then(function(res) {
@@ -61,7 +61,7 @@ describe('/members', function() {
 
     describe('DELETE /members', function() {
         it('should remove', function() {
-            return chai.request(server).del('/members').send({
+            return chai.request(http).del('/members').auth('admin', 'admin').send({
                 teamId: 'team0',
                 personId: 'person0'
             }).then(function(res) {
@@ -73,7 +73,7 @@ describe('/members', function() {
             });
         });
         it('should not remove', function() {
-            return chai.request(server).del('/members').send({
+            return chai.request(http).del('/members').auth('admin', 'admin').send({
                 teamId: 'team1',
                 personId: 'person1'
             }).then(function(res) {

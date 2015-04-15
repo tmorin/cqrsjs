@@ -1,9 +1,9 @@
 /*globals describe:false, beforeEach:false, afterEach:false, it:false */
 /*jshint -W030, browser:false */
 
-var helper = require('./helper');
+var helper = require('../helper');
 var cqrs = require('../../../../lib/cqrs');
-var server = require('../../lib/server');
+var http = require('../../lib/server').http;
 require('../../lib/api/main');
 require('../../lib/domain/main');
 
@@ -25,12 +25,12 @@ describe('/persons', function() {
     });
 
     afterEach(function() {
-        server.close();
+        http.close();
     });
 
     describe('POST /persons', function() {
         it('should add', function() {
-            return chai.request(server).post('/persons').send({
+            return chai.request(http).post('/persons').auth('admin', 'admin').send({
                 name: 'new person'
             }).then(function(res) {
                 res.should.have.status(200);
@@ -39,7 +39,7 @@ describe('/persons', function() {
             });
         });
         it('should not add', function() {
-            return chai.request(server).post('/persons').send({
+            return chai.request(http).post('/persons').auth('admin', 'admin').send({
                 name: ''
             }).then(function(res) {
                 res.should.have.status(500);
@@ -49,14 +49,14 @@ describe('/persons', function() {
 
     describe('GET /persons/:personId', function() {
         it('should get', function() {
-            return chai.request(server).get('/persons/person0').then(function(res) {
+            return chai.request(http).get('/persons/person0').auth('admin', 'admin').then(function(res) {
                 res.should.have.status(200);
                 res.body.should.have.property('personId');
                 res.body.should.have.property('name', 'person0');
             });
         });
         it('should not get', function() {
-            return chai.request(server).get('/persons/none').then(function(res) {
+            return chai.request(http).get('/persons/none').auth('admin', 'admin').then(function(res) {
                 res.should.have.status(500);
             });
         });
@@ -64,7 +64,7 @@ describe('/persons', function() {
 
     describe('GET /persons/:personId/teams', function() {
         it('should get', function() {
-            return chai.request(server).get('/persons/person0/teams').then(function(res) {
+            return chai.request(http).get('/persons/person0/teams').auth('admin', 'admin').then(function(res) {
                 res.should.have.status(200);
                 res.body.should.have.length(1);
                 res.body[0].should.have.property('teamId', 'team0');
@@ -72,7 +72,7 @@ describe('/persons', function() {
             });
         });
         it('should not get', function() {
-            return chai.request(server).get('/persons/none/teams').then(function(res) {
+            return chai.request(http).get('/persons/none/teams').auth('admin', 'admin').then(function(res) {
                 res.should.have.status(500);
             });
         });
@@ -80,7 +80,7 @@ describe('/persons', function() {
 
     describe('PUT /persons/:personId/details', function() {
         it('should update', function() {
-            return chai.request(server).put('/persons/person0/details').send({
+            return chai.request(http).put('/persons/person0/details').auth('admin', 'admin').send({
                 name: 'personBis'
             }).then(function(res) {
                 res.should.have.status(200);
@@ -89,7 +89,7 @@ describe('/persons', function() {
             });
         });
         it('should not update', function() {
-            return chai.request(server).put('/persons/none/details').send({
+            return chai.request(http).put('/persons/none/details').auth('admin', 'admin').send({
                 name: 'personBis'
             }).then(function(res) {
                 res.should.have.status(500);
@@ -99,14 +99,14 @@ describe('/persons', function() {
 
     describe('DELETE /persons/:personId', function() {
         it('should remove', function() {
-            return chai.request(server).del('/persons/person0').then(function(res) {
+            return chai.request(http).del('/persons/person0').auth('admin', 'admin').then(function(res) {
                 res.should.have.status(200);
                 res.body.should.have.property('personId');
                 res.body.should.have.property('name', 'person0');
             });
         });
         it('should not remove', function() {
-            return chai.request(server).del('/persons/none').then(function(res) {
+            return chai.request(http).del('/persons/none').auth('admin', 'admin').then(function(res) {
                 res.should.have.status(500);
             });
         });

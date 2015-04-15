@@ -1,9 +1,9 @@
 /*globals describe:false, beforeEach:false, afterEach:false, it:false */
 /*jshint -W030, browser:false */
 
-var helper = require('./helper');
+var helper = require('../helper');
 var cqrs = require('../../../../lib/cqrs');
-var server = require('../../lib/server');
+var http = require('../../lib/server').http;
 require('../../lib/api/main');
 require('../../lib/domain/main');
 
@@ -25,12 +25,12 @@ describe('/teams', function() {
     });
 
     afterEach(function() {
-        server.close();
+        http.close();
     });
 
     describe('POST /teams', function() {
         it('should add', function() {
-            return chai.request(server).post('/teams').send({
+            return chai.request(http).post('/teams').auth('admin', 'admin').send({
                 name: 'new team'
             }).then(function(res) {
                 res.should.have.status(200);
@@ -39,7 +39,7 @@ describe('/teams', function() {
             });
         });
         it('should not add', function() {
-            return chai.request(server).post('/teams').send({
+            return chai.request(http).post('/teams').auth('admin', 'admin').send({
                 name: ''
             }).then(function(res) {
                 res.should.have.status(500);
@@ -49,14 +49,14 @@ describe('/teams', function() {
 
     describe('GET /teams/:teamId', function() {
         it('should get', function() {
-            return chai.request(server).get('/teams/team0').then(function(res) {
+            return chai.request(http).get('/teams/team0').auth('admin', 'admin').then(function(res) {
                 res.should.have.status(200);
                 res.body.should.have.property('teamId', 'team0');
                 res.body.should.have.property('name', 'team0');
             });
         });
         it('should not get', function() {
-            return chai.request(server).get('/teams/none').then(function(res) {
+            return chai.request(http).get('/teams/none').auth('admin', 'admin').then(function(res) {
                 res.should.have.status(500);
             });
         });
@@ -64,7 +64,7 @@ describe('/teams', function() {
 
     describe('GET /teams/:teamId/persons', function() {
         it('should get', function() {
-            return chai.request(server).get('/teams/team0/persons').then(function(res) {
+            return chai.request(http).get('/teams/team0/persons').auth('admin', 'admin').then(function(res) {
                 res.should.have.status(200);
                 res.body.should.have.length(1);
                 res.body[0].should.have.property('personId', 'person0');
@@ -72,7 +72,7 @@ describe('/teams', function() {
             });
         });
         it('should not get', function() {
-            return chai.request(server).get('/teams/none/persons').then(function(res) {
+            return chai.request(http).get('/teams/none/persons').auth('admin', 'admin').then(function(res) {
                 res.should.have.status(500);
             });
         });
@@ -80,7 +80,7 @@ describe('/teams', function() {
 
     describe('PUT /teams/:teamId/details', function() {
         it('should update', function() {
-            return chai.request(server).put('/teams/team0/details').send({
+            return chai.request(http).put('/teams/team0/details').auth('admin', 'admin').send({
                 name: 'teamBis'
             }).then(function(res) {
                 res.should.have.status(200);
@@ -89,7 +89,7 @@ describe('/teams', function() {
             });
         });
         it('should not update', function() {
-            return chai.request(server).put('/teams/none/details').send({
+            return chai.request(http).put('/teams/none/details').auth('admin', 'admin').send({
                 name: 'teamBis'
             }).then(function(res) {
                 res.should.have.status(500);
@@ -99,14 +99,14 @@ describe('/teams', function() {
 
     describe('DELETE /teams/:teamId', function() {
         it('should remove', function() {
-            return chai.request(server).del('/teams/team0').then(function(res) {
+            return chai.request(http).del('/teams/team0').auth('admin', 'admin').then(function(res) {
                 res.should.have.status(200);
                 res.body.should.have.property('teamId', 'team0');
                 res.body.should.have.property('name', 'team0');
             });
         });
         it('should not remove', function() {
-            return chai.request(server).del('/teams/none').then(function(res) {
+            return chai.request(http).del('/teams/none').auth('admin', 'admin').then(function(res) {
                 res.should.have.status(500);
             });
         });

@@ -1,10 +1,11 @@
-var server = require('../server');
+var passport = require('passport');
+var http = require('../server').http;
 var cqrs = require('../../../../lib/cqrs');
 var c = cqrs();
 
-server.post('/rooms/:roomId/boards/:boardId/columns', function(req, res, next) {
+http.post('/rooms/:roomId/boards/:boardId/columns', passport.authenticate('basic'), function(req, res, next) {
     c.send('add-column', req.params, {
-        userId: 'admin'
+        userId: req.user.personId
     }).then(function(payload) {
         res.json(payload);
     }, function(error) {
@@ -13,7 +14,7 @@ server.post('/rooms/:roomId/boards/:boardId/columns', function(req, res, next) {
     return next();
 });
 
-server.get('/rooms/:roomId/boards/:boardId/columns', function(req, res, next) {
+http.get('/rooms/:roomId/boards/:boardId/columns', passport.authenticate('basic'), function(req, res, next) {
     c.call('get-board', req.params.roomId, req.params.boardId).then(function() {
         return c.call('list-columns-from-board', req.params.roomId, req.params.boardId);
     }).then(function(payload) {
@@ -24,7 +25,7 @@ server.get('/rooms/:roomId/boards/:boardId/columns', function(req, res, next) {
     return next();
 });
 
-server.get('/rooms/:roomId/boards/:boardId/columns/:columnId', function(req, res, next) {
+http.get('/rooms/:roomId/boards/:boardId/columns/:columnId', passport.authenticate('basic'), function(req, res, next) {
     c.call('get-column', req.params.roomId, req.params.boardId, req.params.columnId).then(function(payload) {
         res.json(payload);
     }, function(error) {
@@ -33,9 +34,9 @@ server.get('/rooms/:roomId/boards/:boardId/columns/:columnId', function(req, res
     return next();
 });
 
-server.put('/rooms/:roomId/boards/:boardId/columns/:columnId/details', function(req, res, next) {
+http.put('/rooms/:roomId/boards/:boardId/columns/:columnId/details', passport.authenticate('basic'), function(req, res, next) {
     c.send('update-column-details', req.params, {
-        userId: 'admin'
+        userId: req.user.personId
     }).then(function(payload) {
         res.json(payload);
     }, function(error) {
@@ -44,9 +45,9 @@ server.put('/rooms/:roomId/boards/:boardId/columns/:columnId/details', function(
     return next();
 });
 
-server.put('/rooms/:roomId/boards/:boardId/columns/order', function(req, res, next) {
+http.put('/rooms/:roomId/boards/:boardId/columns/order', passport.authenticate('basic'), function(req, res, next) {
     c.send('update-columns-order', req.params, {
-        userId: 'admin'
+        userId: req.user.personId
     }).then(function(payload) {
         res.json(payload.columns);
     }, function(error) {
@@ -55,9 +56,9 @@ server.put('/rooms/:roomId/boards/:boardId/columns/order', function(req, res, ne
     return next();
 });
 
-server.del('/rooms/:roomId/boards/:boardId/columns/:columnId', function(req, res, next) {
+http.del('/rooms/:roomId/boards/:boardId/columns/:columnId', passport.authenticate('basic'), function(req, res, next) {
     c.send('remove-column', req.params, {
-        userId: 'admin'
+        userId: req.user.personId
     }).then(function(payload) {
         res.json(payload);
     }, function(error) {
